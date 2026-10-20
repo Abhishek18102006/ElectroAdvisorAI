@@ -13,6 +13,7 @@ class RecommendationExplainer:
 
     @classmethod
     def generate_recommendation_item(
+
         cls,
         product: Product,
         score: float,
@@ -20,27 +21,58 @@ class RecommendationExplainer:
     ) -> RecommendationItem:
         specs = product.specs or {}
         uses = state.get("primary_uses", [])
-        gpu_name = specs.get("gpu", "Integrated Graphics")
-        cpu_name = specs.get("cpu", "Processor")
-        ram_gb = specs.get("ram_gb", 8)
-        weight = specs.get("weight_kg", "N/A")
-        battery = specs.get("battery_life_hours", "N/A")
-
+        category = product.category.lower()
         reasons = []
-        if "machine_learning" in uses:
-            if specs.get("gpu_type") == "dedicated":
-                reasons.append(f"Features {gpu_name} with dedicated VRAM and CUDA acceleration for training deep learning models locally.")
-            elif specs.get("gpu_type") == "unified":
-                reasons.append(f"Apple Unified Memory architecture allows direct high-bandwidth GPU access for Metal-accelerated inference.")
-        
-        if "programming" in uses:
-            reasons.append(f"Equipped with {ram_gb}GB RAM and {cpu_name} to ensure swift code compilation, local servers, and containerized development.")
 
-        if state.get("preferences", {}).get("portability"):
-            if isinstance(weight, (int, float)) and weight <= 1.8:
-                reasons.append(f"Weighs {weight}kg with up to {battery} hours of battery life, making it practical to carry between classes across campus.")
-            else:
-                reasons.append(f"Weighs {weight}kg with up to {battery} hours of battery life.")
+        if category == "laptop":
+            gpu_name = specs.get("gpu", "Integrated Graphics")
+            cpu_name = specs.get("cpu", "Processor")
+            ram_gb = specs.get("ram_gb", 8)
+            weight = specs.get("weight_kg", "N/A")
+            battery = specs.get("battery_life_hours", "N/A")
+
+            if "machine_learning" in uses:
+                if specs.get("gpu_type") == "dedicated":
+                    reasons.append(f"Features {gpu_name} with dedicated VRAM and CUDA acceleration for training deep learning models locally.")
+                elif specs.get("gpu_type") == "unified":
+                    reasons.append(f"Apple Unified Memory architecture allows direct high-bandwidth GPU access for Metal-accelerated inference.")
+            
+            if "programming" in uses:
+                reasons.append(f"Equipped with {ram_gb}GB RAM and {cpu_name} to ensure swift code compilation, local servers, and containerized development.")
+
+            if state.get("preferences", {}).get("portability"):
+                if isinstance(weight, (int, float)) and weight <= 1.8:
+                    reasons.append(f"Weighs {weight}kg with up to {battery} hours of battery life, making it practical to carry between classes across campus.")
+                else:
+                    reasons.append(f"Weighs {weight}kg with up to {battery} hours of battery life.")
+
+        elif category == "monitor":
+            disp = specs.get("display", "High-Resolution Display")
+            ports = specs.get("ports", "Versatile Ports")
+            reasons.append(f"Features a crisp {disp} tailored for productive multi-window workflows.")
+            if "programming" in uses:
+                reasons.append(f"Includes {ports} for seamless developer laptop docking and workspace connectivity.")
+            if specs.get("color_gamut"):
+                reasons.append(f"Delivers vibrant visuals with {specs.get('color_gamut')}.")
+
+        elif category == "headphones":
+            htype = specs.get("type", "Active Noise Cancelling")
+            battery = specs.get("battery_life_hours", "30+")
+            reasons.append(f"{htype} engineered to eliminate distracting library and campus noise for deep concentration.")
+            reasons.append(f"Delivers up to {battery} hours of battery playback per charge.")
+
+        elif category == "smartphone":
+            cam = specs.get("camera", "High-Resolution Camera")
+            disp = specs.get("display", "Vivid Screen")
+            reasons.append(f"Features {disp} and {cam} for sharp photography and swift multitasking.")
+            if specs.get("battery_life_hours"):
+                reasons.append(f"Offers up to {specs.get('battery_life_hours')} hours of continuous usage.")
+
+        elif category == "tablet":
+            disp = specs.get("display", "Retina Display")
+            reasons.append(f"Equipped with a responsive {disp} optimized for digital note-taking, reading, and portable campus study.")
+            if specs.get("battery_life_hours"):
+                reasons.append(f"Delivers {specs.get('battery_life_hours')} hours of all-day battery life.")
 
         if not reasons:
             reasons.append(f"Well-rounded option delivering responsive performance and strong value at ₹{product.price:,.0f}.")
@@ -63,79 +95,220 @@ class RecommendationExplainer:
         state: Dict[str, Any]
     ) -> List[TradeOffComparison]:
         """
-        Creates side-by-side trade-off dimensions comparing the two top products.
+        Creates category-aware side-by-side trade-off dimensions comparing the two top products.
         """
         specs_1 = prod_1.specs or {}
         specs_2 = prod_2.specs or {}
+        category = prod_1.category.lower()
 
         trade_offs = []
 
-        # 1. Performance & Compute Dimension
-        gpu_1 = specs_1.get("gpu", "Integrated")
-        gpu_2 = specs_2.get("gpu", "Integrated")
-        vram_1 = specs_1.get("vram_gb", 0)
-        vram_2 = specs_2.get("vram_gb", 0)
-
-        if vram_1 != vram_2 or gpu_1 != gpu_2:
-            perf_explanation = (
-                f"{prod_1.name} has {gpu_1} ({vram_1}GB VRAM), whereas {prod_2.name} features {gpu_2} ({vram_2}GB VRAM). "
-                f"More dedicated VRAM provides larger batch sizes and faster training epochs for local machine learning models."
+        if category == "monitor":
+            # 1. Display & Visual Fidelity
+            d1 = specs_1.get("display", "QHD IPS")
+            d2 = specs_2.get("display", "QHD IPS")
+            trade_offs.append(
+                TradeOffComparison(
+                    criterion="Display & Visual Fidelity",
+                    product_1_verdict=d1,
+                    product_2_verdict=d2,
+                    trade_off_explanation=(
+                        f"{prod_1.name} features {d1}, whereas {prod_2.name} features {d2}. "
+                        f"Choose based on whether higher refresh rate or higher color contrast matters more to your desk setup."
+                    ),
+                )
             )
+
+            # 2. Ports & Connectivity
+            p1 = specs_1.get("ports", "DisplayPort / HDMI")
+            p2 = specs_2.get("ports", "DisplayPort / HDMI")
+            trade_offs.append(
+                TradeOffComparison(
+                    criterion="Connectivity & Ports",
+                    product_1_verdict=p1,
+                    product_2_verdict=p2,
+                    trade_off_explanation=(
+                        f"{prod_1.name} provides: {p1}. In comparison, {prod_2.name} provides: {p2}."
+                    ),
+                )
+            )
+
+        elif category == "headphones":
+            # 1. Audio Features & Noise Cancellation
+            t1 = specs_1.get("type", "Wireless ANC")
+            t2 = specs_2.get("type", "Wireless Adaptive ANC")
+            trade_offs.append(
+                TradeOffComparison(
+                    criterion="Noise Cancellation & Audio Type",
+                    product_1_verdict=t1,
+                    product_2_verdict=t2,
+                    trade_off_explanation=(
+                        f"{prod_1.name} offers {t1} with premium multi-mic ANC, whereas {prod_2.name} provides {t2} with Hi-Res LDAC support."
+                    ),
+                )
+            )
+
+            # 2. Battery Endurance
+            b1 = specs_1.get("battery_life_hours", 30.0)
+            b2 = specs_2.get("battery_life_hours", 50.0)
+            b_exp = (
+                f"{prod_1.name} offers around {b1}h playback with quick charge, whereas {prod_2.name} provides an exceptional {b2}h playback."
+                if b1 != b2
+                else f"Both models provide approximately {b1} hours of listening time."
+            )
+            trade_offs.append(
+                TradeOffComparison(
+                    criterion="Battery Endurance",
+                    product_1_verdict=f"~{b1} hours",
+                    product_2_verdict=f"~{b2} hours",
+                    trade_off_explanation=b_exp,
+                )
+            )
+
+            # 3. Comfort & Headset Weight
+            w1 = specs_1.get("weight_kg", 0.25)
+            w2 = specs_2.get("weight_kg", 0.29)
+            trade_offs.append(
+                TradeOffComparison(
+                    criterion="Comfort & Weight",
+                    product_1_verdict=f"{w1*1000:.0f}g" if isinstance(w1, (int, float)) else str(w1),
+                    product_2_verdict=f"{w2*1000:.0f}g" if isinstance(w2, (int, float)) else str(w2),
+                    trade_off_explanation=(
+                        f"{prod_1.name} is {abs(round((w2 - w1)*1000))}g lighter for prolonged study wear."
+                        if w1 < w2
+                        else f"{prod_2.name} is {abs(round((w1 - w2)*1000))}g lighter for prolonged study wear."
+                    ) if isinstance(w1, (int, float)) and isinstance(w2, (int, float)) and w1 != w2 else "Both headphones have comparable headband weights.",
+                )
+            )
+
+        elif category == "smartphone":
+            # 1. Camera & Optics
+            c1 = specs_1.get("camera", "Advanced Camera System")
+            c2 = specs_2.get("camera", "Triple Camera System")
+            trade_offs.append(
+                TradeOffComparison(
+                    criterion="Camera System",
+                    product_1_verdict=c1,
+                    product_2_verdict=c2,
+                    trade_off_explanation=f"{prod_1.name} features {c1}, while {prod_2.name} equips {c2}.",
+                )
+            )
+
+            # 2. Display & Screen Tech
+            d1 = specs_1.get("display", "OLED Display")
+            d2 = specs_2.get("display", "AMOLED 120Hz")
+            trade_offs.append(
+                TradeOffComparison(
+                    criterion="Display & Refresh Rate",
+                    product_1_verdict=d1,
+                    product_2_verdict=d2,
+                    trade_off_explanation=f"{prod_1.name} equips {d1}, while {prod_2.name} offers {d2}.",
+                )
+            )
+
+            # 3. Battery Endurance
+            b1 = specs_1.get("battery_life_hours", 20.0)
+            b2 = specs_2.get("battery_life_hours", 22.0)
+            trade_offs.append(
+                TradeOffComparison(
+                    criterion="Battery Life",
+                    product_1_verdict=f"~{b1} hours",
+                    product_2_verdict=f"~{b2} hours",
+                    trade_off_explanation=f"{prod_1.name} lasts up to {b1} hours of active screen time compared to ~{b2} hours on {prod_2.name}.",
+                )
+            )
+
+        elif category == "tablet":
+            # 1. Screen & Stylus Capability
+            d1 = specs_1.get("display", "Liquid Retina")
+            d2 = specs_2.get("display", "90Hz WQXGA")
+            trade_offs.append(
+                TradeOffComparison(
+                    criterion="Display & Stylus Support",
+                    product_1_verdict=d1,
+                    product_2_verdict=d2,
+                    trade_off_explanation=(
+                        f"{prod_1.name} features {d1} with Apple Pencil support, whereas {prod_2.name} features {d2} with an included S-Pen stylus."
+                    ),
+                )
+            )
+
+            # 2. Weight & Mobility
+            w1 = specs_1.get("weight_kg", 0.48)
+            w2 = specs_2.get("weight_kg", 0.52)
+            trade_offs.append(
+                TradeOffComparison(
+                    criterion="Chassis Weight & Mobility",
+                    product_1_verdict=f"{w1*1000:.0f}g" if isinstance(w1, (int, float)) else str(w1),
+                    product_2_verdict=f"{w2*1000:.0f}g" if isinstance(w2, (int, float)) else str(w2),
+                    trade_off_explanation=f"{prod_1.name} weighs {w1*1000:.0f}g compared to {w2*1000:.0f}g on {prod_2.name}.",
+                )
+            )
+
         else:
-            perf_explanation = (
-                f"Both offer comparable GPU capabilities ({gpu_1} vs {gpu_2}), but differ in CPU architecture: "
-                f"{specs_1.get('cpu', '')} vs {specs_2.get('cpu', '')}."
+            # Default / Laptop Category Trade-offs
+            gpu_1 = specs_1.get("gpu", "Integrated")
+            gpu_2 = specs_2.get("gpu", "Integrated")
+            vram_1 = specs_1.get("vram_gb", 0)
+            vram_2 = specs_2.get("vram_gb", 0)
+
+            if vram_1 != vram_2 or gpu_1 != gpu_2:
+                perf_explanation = (
+                    f"{prod_1.name} has {gpu_1} ({vram_1}GB VRAM), whereas {prod_2.name} features {gpu_2} ({vram_2}GB VRAM). "
+                    f"More dedicated VRAM provides larger batch sizes and faster training epochs for local machine learning models."
+                )
+            else:
+                perf_explanation = (
+                    f"Both offer comparable GPU capabilities ({gpu_1} vs {gpu_2}), but differ in CPU architecture: "
+                    f"{specs_1.get('cpu', '')} vs {specs_2.get('cpu', '')}."
+                )
+
+            trade_offs.append(
+                TradeOffComparison(
+                    criterion="Compute & Graphics Performance",
+                    product_1_verdict=f"{gpu_1} ({specs_1.get('cpu', '')})",
+                    product_2_verdict=f"{gpu_2} ({specs_2.get('cpu', '')})",
+                    trade_off_explanation=perf_explanation,
+                )
             )
 
-        trade_offs.append(
-            TradeOffComparison(
-                criterion="Compute & Graphics Performance",
-                product_1_verdict=f"{gpu_1} ({specs_1.get('cpu', '')})",
-                product_2_verdict=f"{gpu_2} ({specs_2.get('cpu', '')})",
-                trade_off_explanation=perf_explanation,
+            w1 = specs_1.get("weight_kg", 2.0)
+            w2 = specs_2.get("weight_kg", 2.0)
+            if w1 < w2:
+                port_explanation = f"{prod_1.name} is {round(w2 - w1, 2)}kg lighter and easier to carry in a backpack for campus days."
+            elif w2 < w1:
+                port_explanation = f"{prod_2.name} is {round(w1 - w2, 2)}kg lighter, giving you greater daily portability on campus."
+            else:
+                port_explanation = f"Both laptops have identical weight at {w1}kg."
+
+            trade_offs.append(
+                TradeOffComparison(
+                    criterion="Portability & Weight",
+                    product_1_verdict=f"{w1} kg",
+                    product_2_verdict=f"{w2} kg",
+                    trade_off_explanation=port_explanation,
+                )
             )
-        )
 
-        # 2. Portability & Campus Commute Dimension
-        w1 = specs_1.get("weight_kg", 2.0)
-        w2 = specs_2.get("weight_kg", 2.0)
-        b1 = specs_1.get("battery_life_hours", 6.0)
-        b2 = specs_2.get("battery_life_hours", 6.0)
+            b1 = specs_1.get("battery_life_hours", 6.0)
+            b2 = specs_2.get("battery_life_hours", 6.0)
+            if b1 > b2:
+                batt_explanation = f"{prod_1.name} offers around {b1} hours ({round(b1 - b2, 1)}h more runtime) before needing a charger."
+            elif b2 > b1:
+                batt_explanation = f"{prod_2.name} delivers around {b2} hours of endurance ({round(b2 - b1, 1)}h more runtime) during study sessions."
+            else:
+                batt_explanation = f"Both offer approximately {b1} hours of battery life under normal productivity workloads."
 
-        if w1 < w2:
-            port_explanation = f"{prod_1.name} is {round(w2 - w1, 2)}kg lighter and easier to carry in a backpack for campus days."
-        elif w2 < w1:
-            port_explanation = f"{prod_2.name} is {round(w1 - w2, 2)}kg lighter, giving you greater daily portability on campus."
-        else:
-            port_explanation = f"Both laptops have identical weight at {w1}kg."
-
-        trade_offs.append(
-            TradeOffComparison(
-                criterion="Portability & Weight",
-                product_1_verdict=f"{w1} kg",
-                product_2_verdict=f"{w2} kg",
-                trade_off_explanation=port_explanation,
+            trade_offs.append(
+                TradeOffComparison(
+                    criterion="Battery Endurance",
+                    product_1_verdict=f"~{b1} hours",
+                    product_2_verdict=f"~{b2} hours",
+                    trade_off_explanation=batt_explanation,
+                )
             )
-        )
 
-        # 3. Battery Life Dimension
-        if b1 > b2:
-            batt_explanation = f"{prod_1.name} offers around {b1} hours ({round(b1 - b2, 1)}h more runtime) before needing a charger."
-        elif b2 > b1:
-            batt_explanation = f"{prod_2.name} delivers around {b2} hours of endurance ({round(b2 - b1, 1)}h more runtime) during study sessions."
-        else:
-            batt_explanation = f"Both offer approximately {b1} hours of battery life under normal productivity workloads."
-
-        trade_offs.append(
-            TradeOffComparison(
-                criterion="Battery Endurance",
-                product_1_verdict=f"~{b1} hours",
-                product_2_verdict=f"~{b2} hours",
-                trade_off_explanation=batt_explanation,
-            )
-        )
-
-        # 4. Pricing & Budget Efficiency
+        # Common Price & Budget Efficiency Dimension for all categories
         diff = abs(prod_1.price - prod_2.price)
         if prod_1.price < prod_2.price:
             price_explanation = f"{prod_1.name} is ₹{diff:,.0f} more economical, leaving room in your budget for accessories."
@@ -154,6 +327,7 @@ class RecommendationExplainer:
         )
 
         return trade_offs
+
 
     @classmethod
     def generate_no_match_explanation(

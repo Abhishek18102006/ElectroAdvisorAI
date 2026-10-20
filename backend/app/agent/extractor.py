@@ -179,10 +179,11 @@ class RequirementsExtractor:
         # Check for change of mind or update intent
         if re.search(r"\b(actually|instead|change\s*my\s*budget|changed\s*my\s*mind|let'?s\s*make\s*it|what\s*if)\b", lower):
             extracted["last_intent"] = "requirement_change"
-        elif re.search(r"\b(thanks?|thank\s*you|awesome|great|perfect|cool)\b", lower):
+        elif re.search(r"\b(thanks?|thank\s*you|thx|much\s*appreciated)\b", lower) or re.match(r"^(awesome|great|perfect|cool|ok\s*thanks?)[!.]*$", lower):
             extracted["last_intent"] = "appreciation"
         elif re.search(r"\b(lighter|lightest|cheaper|lowest\s*price|more\s*battery)\b", lower):
             extracted["last_intent"] = "refinement"
+
 
         return extracted
 

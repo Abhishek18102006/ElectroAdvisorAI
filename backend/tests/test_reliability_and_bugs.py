@@ -195,7 +195,69 @@ async def test_llm_failure_and_timeout_fallback():
                 conversation_history=[],
                 current_state={},
             )
-            # Should seamlessly fall back to rules
             assert extracted["category"] == "laptop"
             assert extracted["budget_max"] == 80000.0
             assert "programming" in extracted["primary_uses"]
+
+
+def test_all_non_laptop_categories_recommendation_and_trade_offs(client):
+    """Verifies that non-laptop devices (headphones, monitors, smartphones, tablets) work end-to-end with category-accurate trade-offs."""
+    # 1. Headphones
+    res_audio = client.post("/api/v1/conversations")
+    c_audio = res_audio.json()["id"]
+    msg_res = client.post(
+        f"/api/v1/conversations/{c_audio}/messages",
+        json={"content": "I need headphones for study focus under 30000"},
+    )
+    assert msg_res.status_code == 200
+    dec_audio = msg_res.json()["decision"]
+    assert dec_audio["action"] == "recommend"
+    assert len(dec_audio["recommendations"]) == 2
+    assert dec_audio["recommendations"][0]["product"]["category"] == "headphones"
+    criteria = [t["criterion"] for t in dec_audio["trade_offs"]]
+    assert "Noise Cancellation & Audio Type" in criteria
+    assert "Compute & Graphics Performance" not in criteria
+
+    # 2. Monitors
+    res_mon = client.post("/api/v1/conversations")
+    c_mon = res_mon.json()["id"]
+    msg_mon = client.post(
+        f"/api/v1/conversations/{c_mon}/messages",
+        json={"content": "I need a monitor for programming under 40000"},
+    )
+    assert msg_mon.status_code == 200
+    dec_mon = msg_mon.json()["decision"]
+    assert dec_mon["action"] == "recommend"
+    assert dec_mon["recommendations"][0]["product"]["category"] == "monitor"
+    criteria_mon = [t["criterion"] for t in dec_mon["trade_offs"]]
+    assert "Display & Visual Fidelity" in criteria_mon
+    assert "Compute & Graphics Performance" not in criteria_mon
+
+    # 3. Smartphones
+    res_phn = client.post("/api/v1/conversations")
+    c_phn = res_phn.json()["id"]
+    msg_phn = client.post(
+        f"/api/v1/conversations/{c_phn}/messages",
+        json={"content": "I need a smartphone with great camera under 75000"},
+    )
+    assert msg_phn.status_code == 200
+    dec_phn = msg_phn.json()["decision"]
+    assert dec_phn["action"] == "recommend"
+    assert dec_phn["recommendations"][0]["product"]["category"] == "smartphone"
+    criteria_phn = [t["criterion"] for t in dec_phn["trade_offs"]]
+    assert "Camera System" in criteria_phn
+
+    # 4. Tablets
+    res_tab = client.post("/api/v1/conversations")
+    c_tab = res_tab.json()["id"]
+    msg_tab = client.post(
+        f"/api/v1/conversations/{c_tab}/messages",
+        json={"content": "I need a tablet for digital notes under 40000"},
+    )
+    assert msg_tab.status_code == 200
+    dec_tab = msg_tab.json()["decision"]
+    assert dec_tab["action"] == "recommend"
+    assert dec_tab["recommendations"][0]["product"]["category"] == "tablet"
+    criteria_tab = [t["criterion"] for t in dec_tab["trade_offs"]]
+    assert "Display & Stylus Support" in criteria_tab
+

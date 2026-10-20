@@ -84,7 +84,8 @@ class SalesAgentOrchestrator:
 
         # 4. Handle Post-Recommendation Follow-up Intents
         last_intent = extracted_patch.get("last_intent")
-        if state.get("is_ready_for_recommendation") and last_intent in ["appreciation", "refinement"]:
+        already_recommended = bool(state.get("recommended_product_ids"))
+        if already_recommended and last_intent in ["appreciation", "refinement"]:
             if last_intent == "appreciation":
                 return AgentDecision(
                     action="informational",
@@ -94,6 +95,7 @@ class SalesAgentOrchestrator:
             elif last_intent == "refinement" and any(w in lower_msg for w in ["lighter", "lightest", "weight"]):
                 state["preferences"]["portability"] = True
                 state["preferences"]["max_weight_kg"] = 1.6
+
 
         # 5. Decision Logic: Has Enough Info?
         category = state.get("category", "laptop")
