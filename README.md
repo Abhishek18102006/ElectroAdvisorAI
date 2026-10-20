@@ -15,9 +15,10 @@ ElectroAdvisor engages in a natural multi-turn conversation, dynamically tracks 
 4. [Project Directory Structure](#-project-directory-structure)
 5. [Quickstart Setup Guide](#-quickstart-setup-guide)
 6. [Automated Test Suite](#-automated-test-suite)
-7. [API Reference](#-api-reference)
+7. [Complete 12-Endpoint API Architecture](#-complete-12-endpoint-api-architecture)
 8. [Edge Cases & Reliability](#-edge-cases--reliability)
 9. [Assessment Timeline & Check-ins](#-assessment-timeline--check-ins)
+
 
 ---
 
@@ -299,96 +300,126 @@ We chose an **Orchestrated Stateful Agent with a Dual-Mode (LLM + Deterministic 
 
 ---
 
-## 📡 API Reference & Payload Examples
+## 📡 Complete 12-Endpoint API Architecture
 
-### 1. `GET /api/v1/health`
-**Purpose:** Check application health and SQLite catalog count.  
+Based on architecture review and engineering rigor, the API specification has been expanded from the baseline 6 endpoints to a **complete 12-endpoint architecture** to support hybrid UI controls, debuggability, side-by-side comparison, taxonomy browsing, and user feedback loops.
+
+| Category | Method | Endpoint | Purpose & Engineering Justification |
+|---|---|---|---|
+| **Catalog** | `GET` | `/api/v1/products` | List, filter by price/brand/search, and paginate catalog items deterministically |
+| **Catalog** | `GET` | `/api/v1/products/{product_id}` | Retrieve comprehensive specs, intended uses, pros, and cons for a specific item |
+| **Catalog** | `GET` | `/api/v1/products/compare` | **UX Enhancement:** Side-by-side specification matrix & trade-offs (`?ids=LAP-001,LAP-004`) |
+| **Catalog** | `GET` | `/api/v1/categories` | **UI Optimization:** Distinct categories, item counts, price ranges, and brands for UI chips |
+| **Agent** | `POST` | `/api/v1/conversations` | Initialize a new stateful customer sales consultation session |
+| **Agent** | `POST` | `/api/v1/conversations/{id}/messages` | Process customer natural language input and execute decision graph |
+| **Agent** | `GET` | `/api/v1/conversations/{id}` | Retrieve full message history, extracted requirements, and memory state |
+| **Agent** | `PUT` | `/api/v1/conversations/{id}/requirements` | **Hybrid UI Control:** Direct state override via sliders/chips without typing in chat |
+| **Agent** | `DELETE` | `/api/v1/conversations/{id}` | **Privacy & Reset:** Wipe conversation messages and requirements state safely |
+| **Agent** | `POST` | `/api/v1/conversations/{id}/feedback` | **Product Analytics:** Record user sentiment (thumbs up/down) & purchase conversion intent |
+| **System** | `GET` | `/api/v1/health` | Service uptime and database connectivity health check |
+| **System** | `GET` | `/api/v1/conversations/{id}/debug` | **Engineering Rigor:** Inspect active constraints, decision traces, and candidate scoring |
+
+---
+
+### Endpoint Payloads & Examples
+
+#### 1. `GET /api/v1/categories`
 **Response (200 OK):**
 ```json
 {
-  "status": "ok",
-  "service": "ElectroAdvisor AI Sales Assistant API",
-  "database": "connected",
-  "products_count": 23
-}
-```
-
-### 2. `GET /api/v1/products`
-**Query Parameters:** `category`, `brand`, `min_price`, `max_price`, `search`, `page`, `limit`  
-**Validation:** Returns `422 Unprocessable Entity` if `min_price > max_price`.  
-**Response (200 OK):**
-```json
-{
-  "total": 23,
-  "page": 1,
-  "limit": 2,
-  "pages": 12,
-  "items": [
+  "total_categories": 5,
+  "categories": [
     {
-      "id": "LAP-001",
-      "name": "Lenovo IdeaPad Slim 3 15",
-      "brand": "Lenovo",
-      "category": "laptop",
-      "price": 42990.0,
-      "rating": 4.3,
-      "specs": { "ram_gb": 8, "gpu_type": "integrated", "weight_kg": 1.62 }
+      "name": "laptop",
+      "display_name": "Laptop",
+      "count": 14,
+      "min_price": 32990.0,
+      "max_price": 179990.0,
+      "brands": ["Acer", "Apple", "ASUS", "Dell", "HP", "Lenovo"]
     }
   ]
 }
 ```
 
-### 3. `GET /api/v1/products/{product_id}`
-**Response (200 OK):** Full product details including `specs`, `intended_uses`, `features`, `pros`, and `cons`.  
-**Error (404 Not Found):** `{"detail": "Product with ID 'INVALID-1' not found"}`
-
-### 4. `POST /api/v1/conversations`
-**Purpose:** Initialize a new customer conversation.  
-**Response (201 Created):**
+#### 2. `GET /api/v1/products/compare?ids=LAP-001,LAP-004`
+**Response (200 OK):**
 ```json
 {
-  "id": "conv_a1b2c3d4e5f6",
-  "status": "active",
-  "state": { "category": "laptop", "budget_max": null, "primary_uses": [] },
-  "messages": []
+  "product_ids": ["LAP-001", "LAP-004"],
+  "products": [...],
+  "comparison_matrix": {
+    "price": { "label": "Price (INR)", "values": { "LAP-001": 42990.0, "LAP-004": 76990.0 } },
+    "weight_kg": { "label": "Weight (kg)", "values": { "LAP-001": 1.62, "LAP-004": 2.1 } }
+  },
+  "key_differences": [
+    "Lenovo IdeaPad Slim 3 15 is ₹34,000 more affordable than Acer Nitro V 15.",
+    "Lenovo IdeaPad Slim 3 15 is 0.48 kg lighter (1.62 kg vs 2.1 kg)."
+  ]
 }
 ```
 
-### 5. `POST /api/v1/conversations/{id}/messages`
-**Request Body:** `{"content": "Around 80,000. Mostly local experiments, and I carry it around campus."}`  
-**Validation:** Returns `422` if message is empty or whitespace only.  
+#### 3. `PUT /api/v1/conversations/{id}/requirements`
+**Request Body:**
+```json
+{
+  "budget_max": 75000.0,
+  "min_ram_gb": 16,
+  "requires_gpu": true,
+  "portability_important": true
+}
+```
+**Response (200 OK):** Returns updated `ConversationResponse` with synchronized state.
+
+#### 4. `DELETE /api/v1/conversations/{id}`
+**Response (200 OK):**
+```json
+{
+  "status": "deleted",
+  "conversation_id": "conv_a1b2c3d4e5f6",
+  "message": "Conversation context and history cleared successfully."
+}
+```
+
+#### 5. `POST /api/v1/conversations/{id}/feedback`
+**Request Body:**
+```json
+{
+  "rating": "thumbs_up",
+  "purchase_intent": true,
+  "selected_product_id": "LAP-004",
+  "comment": "Perfect recommendation for my college coursework and machine learning."
+}
+```
+**Response (200 OK):** Status `received` with timestamp and saved feedback metadata.
+
+#### 6. `GET /api/v1/conversations/{id}/debug`
 **Response (200 OK):**
 ```json
 {
   "conversation_id": "conv_a1b2c3d4e5f6",
-  "user_message": { "id": 1, "sender": "customer", "content": "Around 80,000..." },
-  "agent_message": { "id": 2, "sender": "agent", "content": "Based on your requirements..." },
-  "decision": {
-    "action": "recommend",
-    "recommendations": [
+  "status": "active",
+  "state": { "budget_max": 80000.0, "category": "laptop", "primary_uses": ["programming", "machine_learning"] },
+  "hard_constraints": { "max_budget": 80000.0, "min_ram_gb": 16, "requires_gpu": true },
+  "preferences": { "portability": true, "battery_priority": true },
+  "message_count": 4,
+  "catalog_diagnostics": {
+    "total_catalog_products": 23,
+    "category": "laptop",
+    "category_products_count": 14,
+    "passing_hard_filters_count": 2,
+    "rejections_summary": { "over_budget": 5, "missing_dedicated_gpu": 7 },
+    "top_candidates": [
       {
-        "product": { "id": "LAP-004", "name": "Acer Nitro V 15", "price": 76990.0 },
-        "why_recommended": "Features NVIDIA GeForce RTX 4050 6GB GDDR6...",
-        "suitability_score": 93.5
+        "id": "LAP-004",
+        "name": "Acer Nitro V 15",
+        "price": 76990.0,
+        "total_score": 93.5,
+        "score_breakdown": { "use_case_score": 40.0, "portability_score": 15.0, "value_score": 13.5 }
       }
-    ],
-    "trade_offs": [
-      {
-        "criterion": "Compute & Graphics Performance",
-        "product_1_verdict": "RTX 4050 (6GB VRAM)",
-        "product_2_verdict": "RTX 3050 (6GB VRAM)",
-        "trade_off_explanation": "Acer Nitro V has newer Ada Lovelace architecture..."
-      }
-    ],
-    "state": { "budget_max": 80000.0, "is_ready_for_recommendation": true }
+    ]
   }
 }
 ```
-
-### 6. `GET /api/v1/conversations/{id}`
-**Purpose:** Retrieve conversation message history and active requirements memory state.
-
-### 7. `POST /api/v1/conversations/{id}/reset`
-**Purpose:** Reset conversation state back to initial blank values.
 
 ---
 
@@ -399,7 +430,7 @@ We chose an **Orchestrated Stateful Agent with a Dual-Mode (LLM + Deterministic 
 3. **Contradictory Constraints Detection:** Detects contradictions (e.g. `min_price > max_price` or "MacBook running Windows") and asks for clarification.
 4. **Category Isolation:** Switching categories (e.g., from laptop to monitor) resets hardware constraints so laptop RAM requirements do not bleed into monitor queries.
 5. **Post-Recommendation Follow-ups:** Understands user refinements ("any lighter options?", "thanks") and responds appropriately without repeating the initial recommendation.
-6. **Graceful LLM Fallbacks:** Validates LLM responses with Pydantic schemas, imposes a 7-second timeout, and falls back to deterministic rules if the LLM output is malformed.
+6. **Graceful LLM Fallbacks:** Validates LLM responses with Pydantic schemas, imposes a 5-second timeout, and falls back to deterministic rules if the LLM output is malformed.
 
 ---
 
@@ -410,19 +441,26 @@ We chose an **Orchestrated Stateful Agent with a Dual-Mode (LLM + Deterministic 
 - **Artifacts:** Documented in [docs/architecture.md](docs/architecture.md) and viewable in the React web UI. Includes Mermaid.js flowchart and ASCII box diagram.
 
 ### Day 2 Check-in (20 October 2026, 9:00 PM): Progress Report
+- **Architecture Evolution:** Based on architecture review, the API specification has been expanded from the baseline 6 endpoints to 12 endpoints to support hybrid UI controls, debuggability, and user feedback loops.
 - **What is Implemented So Far:**
-  - ✅ **FastAPI Backend REST API:** All 6 required endpoints implemented with Pydantic validation, deterministic sorting, and error handling.
+  - ✅ **FastAPI Backend REST API (Complete 12 Endpoints):** All 12 endpoints implemented with Pydantic validation, deterministic sorting, and error handling.
   - ✅ **Two-Stage Recommendation Engine:** Application-level hard filtering (budget cap, category, RAM, dedicated GPU) followed by soft preference utility scoring (0–100 pts).
   - ✅ **State Tracking & Orchestrator:** Stateful conversation memory across turns, category isolation, and semantic clarification tracking.
-  - ✅ **Dual-Mode Extractor:** Support for Gemini and OpenAI with Pydantic validation, 7s timeout, and regex rule engine.
+  - ✅ **Dual-Mode Extractor:** Support for Gemini and OpenAI with Pydantic validation, 5s timeout, and regex rule engine.
   - ✅ **React Frontend:** Chat UI with live State Inspector, product recommendation cards, and trade-off comparison table.
-  - ✅ **Automated Tests:** 20+ automated tests passing with pytest.
+  - ✅ **Automated Tests:** 37 automated tests passing with pytest across all 12 endpoints and core edge cases.
 - **What Works:**
   - Multi-turn benchmark conversation from Section 3 (College $\rightarrow$ Programming & ML $\rightarrow$ Around 80k & campus carry $\rightarrow$ Top 2 recommendations strictly within ₹80k).
   - Mind changes (updating budget mid-conversation).
   - Category transitions (laptop to monitor/headphones).
   - Indian currency parsing (`₹1,20,000`, `80k`).
   - Dynamic database-computed no-match explanations.
+  - Side-by-side product comparisons (`/api/v1/products/compare`).
+  - Taxonomy loading for chips/dropdowns (`/api/v1/categories`).
+  - UI state override (`PUT /api/v1/conversations/{id}/requirements`).
+  - Session wipe and privacy reset (`DELETE /api/v1/conversations/{id}`).
+  - Recommendation feedback collection (`POST /api/v1/conversations/{id}/feedback`).
+  - Engineering diagnostics and candidate traces (`GET /api/v1/conversations/{id}/debug`).
 - **Current Limitations & Known Areas for Improvement:**
   - *Headless Browser Driver in Sandbox:* Automated Playwright browser subagents encountered an external CDN mirror 404 issue downloading Windows driver binaries; local manual browser testing works normally.
   - *Catalog Depth:* The synthetic catalog has 23 items with depth concentrated in laptops (14 models) and 2–3 items in other categories.
@@ -434,3 +472,4 @@ We chose an **Orchestrated Stateful Agent with a Dual-Mode (LLM + Deterministic 
 ### Day 3 Check-in (21 October 2026, Google Meet): Final Submission & Demo
 - **Status:** Ready for live demonstration.
 - **Artifacts:** Source code, automated tests, final README, and interview defense guide in [docs/demo_guide.md](docs/demo_guide.md).
+

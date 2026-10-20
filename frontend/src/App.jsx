@@ -45,6 +45,14 @@ export default function App() {
   const startNewConversation = async () => {
     setIsLoading(true);
     try {
+      if (conversationId) {
+        try {
+          await fetch(`${API_BASE}/conversations/${conversationId}`, { method: 'DELETE' });
+        } catch (e) {
+          console.warn('Failed to delete previous conversation:', e);
+        }
+      }
+
       const res = await fetch(`${API_BASE}/conversations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -52,6 +60,7 @@ export default function App() {
       const data = await res.json();
       setConversationId(data.id);
       setCurrentState(data.state || null);
+
 
       // Seed initial welcoming message
       setMessages([

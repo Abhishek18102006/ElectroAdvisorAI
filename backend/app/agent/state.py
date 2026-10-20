@@ -31,7 +31,35 @@ def create_initial_state() -> Dict[str, Any]:
     }
 
 
+def set_category(state: Dict[str, Any], new_category: str) -> Dict[str, Any]:
+
+    """Helper to cleanly transition category and reset category-specific constraints."""
+    s = copy.deepcopy(state) if state else create_initial_state()
+    new_cat_lower = new_category.lower().strip()
+    old_cat = s.get("category", "laptop").lower()
+    if old_cat != new_cat_lower:
+        s["category"] = new_cat_lower
+        s["primary_uses"] = []
+        s["hard_constraints"] = {
+            "max_budget": s.get("budget_max"),
+            "min_ram_gb": None,
+            "requires_gpu": None,
+            "required_os": None,
+        }
+        s["preferences"] = {
+            "portability": False,
+            "battery_priority": False,
+            "ml_environment": None,
+            "preferred_brands": [],
+        }
+        s["is_ready_for_recommendation"] = False
+    else:
+        s["category"] = new_cat_lower
+    return s
+
+
 class StateManager:
+
     """
     Manages and tracks customer requirements across conversation turns.
     Preserves existing requirements while updating any fields the customer modifies or clarifies.

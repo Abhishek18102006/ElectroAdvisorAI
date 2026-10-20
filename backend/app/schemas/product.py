@@ -45,3 +45,25 @@ class ProductListResponse(BaseModel):
     limit: int
     pages: int
     items: List[ProductResponse]
+
+
+class CategoryItem(BaseModel):
+    name: str
+    display_name: str
+    count: int
+    min_price: float
+    max_price: float
+    brands: List[str]
+
+
+class CategoryListResponse(BaseModel):
+    total_categories: int
+    categories: List[CategoryItem]
+
+
+class ProductCompareResponse(BaseModel):
+    product_ids: List[str]
+    products: List[ProductResponse]
+    comparison_matrix: Dict[str, Dict[str, Any]]
+    key_differences: List[str]
+
