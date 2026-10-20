@@ -33,7 +33,7 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     version="1.0.0",
     description=(
-        "Production-grade AI Electronics Sales Assistant Backend. "
+        "AI Electronics Sales Assistant Backend. "
         "Understands natural language customer needs, tracks requirements state, "
         "filters products strictly by hard constraints, ranks using soft preferences, "
         "and recommends the top 2 grounded products with detailed trade-off analysis."
@@ -41,10 +41,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware for React frontend integration
+# CORS middleware with explicit origins (compatible with credentials)
+cors_origins = [origin for origin in settings.CORS_ORIGINS if origin != "*"]
+if not cors_origins:
+    cors_origins = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000", "http://127.0.0.1:3000"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -73,5 +77,5 @@ async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled server error on {request.url.path}: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
-        content={"detail": "An internal server error occurred. Please verify your request.", "error": str(exc)},
+        content={"detail": "An internal server error occurred. Please verify your request."},
     )

@@ -268,44 +268,138 @@ The backend includes a comprehensive automated test suite built with `pytest` co
 
 ```bash
 cd backend
+
+# Windows:
 .\.venv\Scripts\python.exe -m pytest
+
+# Linux / macOS (or any active virtual environment):
+pytest
+# or
+python -m pytest backend/tests
 ```
 
-### Test Coverage Highlights:
-- ✅ `test_full_assessment_example_conversation_flow`: Direct reproduction of Section 3 benchmark:
-  1. *Customer:* "I need a laptop for college." $\rightarrow$ Agent asks for primary use.
-  2. *Customer:* "Programming and machine learning. My budget is limited." $\rightarrow$ Agent asks for approximate budget and local vs. cloud.
-  3. *Customer:* "Around ₹80,000. Mostly local experiments, and I carry it around campus." $\rightarrow$ Agent delivers top 2 recommendations strictly within ₹80,000 with 16GB RAM + dedicated RTX GPU + spec trade-offs, without asking further unnecessary questions.
-- ✅ `test_hard_constraint_budget_cap`: Validates that products exceeding the budget ceiling are strictly eliminated.
-- ✅ `test_hard_constraint_ram_and_gpu`: Ensures local ML requires dedicated GPU and $\ge 16$GB RAM.
-- ✅ `test_ranking_prefers_portability_when_requested`: Confirms lightweight models score higher when campus carry is prioritized.
-- ✅ `test_state_tracking_and_mind_change`: Verifies requirement updates when customer alters budget mid-conversation.
-- ✅ `test_impossible_constraints_honest_no_match`: Tests graceful and honest handling when zero products match constraints.
-- ✅ `test_single_turn_complete_requirements`: Verifies immediate recommendation when user provides complete requirements on turn 1.
+### Docker Quickstart (Optional)
+You can run the entire FARM stack (FastAPI backend + React frontend) with a single command:
+```bash
+docker compose up --build
+```
+- Frontend available at: `http://localhost:5173`
+- Backend API available at: `http://localhost:8000` (Swagger docs at `http://localhost:8000/docs`)
 
 ---
 
-## 📡 API Reference
+## 🧠 Why This LLM / Agent Approach Fits the Task
 
-| Method | Endpoint | Purpose |
-| :--- | :--- | :--- |
-| `GET` | `/api/v1/health` | Application health check, database status, and catalog count |
-| `GET` | `/api/v1/products` | List products with pagination, category, price, and brand filtering |
-| `GET` | `/api/v1/products/{product_id}` | Retrieve specific product technical details |
-| `POST` | `/api/v1/conversations` | Initialize a new customer conversation session |
-| `POST` | `/api/v1/conversations/{id}/messages` | Send message and receive agent recommendation / response |
-| `GET` | `/api/v1/conversations/{id}` | Retrieve full conversation trajectory and active requirements state |
-| `POST` | `/api/v1/conversations/{id}/reset` | Reset conversation memory to initial state |
+Section 4 of the assessment invites candidates to choose an LLM / agent framework and explain why the approach fits the problem.
+
+We chose an **Orchestrated Stateful Agent with a Dual-Mode (LLM + Deterministic NLP) Extractor**:
+1. **Zero Hallucination of Database Records:** Naive LLM agents that generate SQL or choose products directly frequently hallucinate model numbers, prices, or technical specifications. In ElectroAdvisor, the LLM is restricted to **structured entity extraction** (turning text into Pydantic models). Product retrieval, filtering, and scoring are executed strictly in deterministic Python code and SQLAlchemy ORM.
+2. **Explicit Decision Orchestrator vs. Blind Questionnaires:** Instead of relying on a rigid state machine questionnaire or an unconstrained LLM loop, an explicit Decision Graph evaluates requirement completeness. It asks a focused question when essential fields (use case, budget, or local vs. cloud) are missing, and transitions immediately to recommendation once requirements are sufficient.
+3. **Reproducible, Zero-Cost Evaluation:** By supporting Google Gemini and OpenAI with a deterministic fallback, recruiters and automated CI pipelines can clone and test the repository without needing paid API keys or hitting external rate limits.
+
+---
+
+## 📡 API Reference & Payload Examples
+
+### 1. `GET /api/v1/health`
+**Purpose:** Check application health and SQLite catalog count.  
+**Response (200 OK):**
+```json
+{
+  "status": "ok",
+  "service": "ElectroAdvisor AI Sales Assistant API",
+  "database": "connected",
+  "products_count": 23
+}
+```
+
+### 2. `GET /api/v1/products`
+**Query Parameters:** `category`, `brand`, `min_price`, `max_price`, `search`, `page`, `limit`  
+**Validation:** Returns `422 Unprocessable Entity` if `min_price > max_price`.  
+**Response (200 OK):**
+```json
+{
+  "total": 23,
+  "page": 1,
+  "limit": 2,
+  "pages": 12,
+  "items": [
+    {
+      "id": "LAP-001",
+      "name": "Lenovo IdeaPad Slim 3 15",
+      "brand": "Lenovo",
+      "category": "laptop",
+      "price": 42990.0,
+      "rating": 4.3,
+      "specs": { "ram_gb": 8, "gpu_type": "integrated", "weight_kg": 1.62 }
+    }
+  ]
+}
+```
+
+### 3. `GET /api/v1/products/{product_id}`
+**Response (200 OK):** Full product details including `specs`, `intended_uses`, `features`, `pros`, and `cons`.  
+**Error (404 Not Found):** `{"detail": "Product with ID 'INVALID-1' not found"}`
+
+### 4. `POST /api/v1/conversations`
+**Purpose:** Initialize a new customer conversation.  
+**Response (201 Created):**
+```json
+{
+  "id": "conv_a1b2c3d4e5f6",
+  "status": "active",
+  "state": { "category": "laptop", "budget_max": null, "primary_uses": [] },
+  "messages": []
+}
+```
+
+### 5. `POST /api/v1/conversations/{id}/messages`
+**Request Body:** `{"content": "Around 80,000. Mostly local experiments, and I carry it around campus."}`  
+**Validation:** Returns `422` if message is empty or whitespace only.  
+**Response (200 OK):**
+```json
+{
+  "conversation_id": "conv_a1b2c3d4e5f6",
+  "user_message": { "id": 1, "sender": "customer", "content": "Around 80,000..." },
+  "agent_message": { "id": 2, "sender": "agent", "content": "Based on your requirements..." },
+  "decision": {
+    "action": "recommend",
+    "recommendations": [
+      {
+        "product": { "id": "LAP-004", "name": "Acer Nitro V 15", "price": 76990.0 },
+        "why_recommended": "Features NVIDIA GeForce RTX 4050 6GB GDDR6...",
+        "suitability_score": 93.5
+      }
+    ],
+    "trade_offs": [
+      {
+        "criterion": "Compute & Graphics Performance",
+        "product_1_verdict": "RTX 4050 (6GB VRAM)",
+        "product_2_verdict": "RTX 3050 (6GB VRAM)",
+        "trade_off_explanation": "Acer Nitro V has newer Ada Lovelace architecture..."
+      }
+    ],
+    "state": { "budget_max": 80000.0, "is_ready_for_recommendation": true }
+  }
+}
+```
+
+### 6. `GET /api/v1/conversations/{id}`
+**Purpose:** Retrieve conversation message history and active requirements memory state.
+
+### 7. `POST /api/v1/conversations/{id}/reset`
+**Purpose:** Reset conversation state back to initial blank values.
 
 ---
 
 ## 🛡 Edge Cases & Reliability
 
-1. **Controlled Tool Execution:** Product queries utilize parameterized SQLAlchemy ORM filters. The agent cannot execute arbitrary model-generated SQL strings.
-2. **Dual-Mode LLM / Rule Fallback:** If `GEMINI_API_KEY` or `OPENAI_API_KEY` is provided in `.env`, the system utilizes structured JSON extraction. If no key is configured, it falls back seamlessly to the deterministic rule-based NLP engine, ensuring 100% offline evaluation and zero testing failures.
-3. **Mind-Changing Mid-Conversation:** If a user specifies ₹80,000 and subsequently says *"Actually, my budget changed to ₹60,000"*, the State Manager updates the budget ceiling to ₹60,000 while preserving earlier use cases.
-4. **Vague Inquiries & Greetings:** Casual greetings ("Hello!") or vague inputs prompt polite guidance without crashing or fabricating recommendations.
-5. **Spec Hallucination Safeguard:** Recommendations and trade-off points are drawn strictly from attributes stored in the SQLite database.
+1. **Controlled Tool Execution:** Queries use parameterized SQLAlchemy ORM filters. The agent cannot execute arbitrary SQL.
+2. **Indian Number Format Support:** Correctly parses Indian currency groupings (e.g. `₹1,20,000` parses to `120000.0`, `1.5 lakh` parses to `150000.0`).
+3. **Contradictory Constraints Detection:** Detects contradictions (e.g. `min_price > max_price` or "MacBook running Windows") and asks for clarification.
+4. **Category Isolation:** Switching categories (e.g., from laptop to monitor) resets hardware constraints so laptop RAM requirements do not bleed into monitor queries.
+5. **Post-Recommendation Follow-ups:** Understands user refinements ("any lighter options?", "thanks") and responds appropriately without repeating the initial recommendation.
+6. **Graceful LLM Fallbacks:** Validates LLM responses with Pydantic schemas, imposes a 7-second timeout, and falls back to deterministic rules if the LLM output is malformed.
 
 ---
 
@@ -313,33 +407,30 @@ cd backend
 
 ### Day 1 Check-in (19 October 2026, 9:00 PM): Architecture Skeleton
 - **Status:** **Completed & Submitted**
-- **Artifacts:** Documented in [docs/architecture.md](docs/architecture.md) and viewable in the React web UI via the "Architecture" modal button. Includes the Mermaid.js component flowchart, ASCII architecture box diagram, and module breakdown.
+- **Artifacts:** Documented in [docs/architecture.md](docs/architecture.md) and viewable in the React web UI. Includes Mermaid.js flowchart and ASCII box diagram.
 
 ### Day 2 Check-in (20 October 2026, 9:00 PM): Progress Report
 - **What is Implemented So Far:**
-  - ✅ **FastAPI Backend REST API:** Fully functional endpoints for health checking, product listing with pagination and filters, product details, conversation creation, stateful multi-turn messaging, and state reset.
-  - ✅ **Two-Stage Recommendation Engine:** Strict application-level hard constraints filtering (maximum budget cap, category, minimum RAM, required GPU) followed by soft preference ranking (0–100 scoring based on use-case fit, campus portability, battery endurance, budget value, customer rating).
-  - ✅ **AI Agent State Machine:** Stateful memory tracking across turns, mind-change detection, and dynamic decision orchestrator that identifies missing information and avoids redundant questions once requirements are established.
-  - ✅ **Dual-Mode Requirement Extraction:** Supports Google Gemini or OpenAI LLM structured JSON output, with a deterministic regex/rule-based NLP parser fallback for 100% offline evaluation.
-  - ✅ **Controlled Database Tools:** Parameterized SQLAlchemy ORM queries preventing arbitrary SQL injection.
-  - ✅ **React Single-Page Application:** Built with Vite and modern CSS, featuring live requirement memory inspection, spec-accurate product recommendation cards, and side-by-side trade-off matrices.
-  - ✅ **Automated Test Suite:** 20/20 test cases passing with pytest (100% pass rate in 0.74s) covering unit, integration, edge cases, and the benchmark conversation flow.
+  - ✅ **FastAPI Backend REST API:** All 6 required endpoints implemented with Pydantic validation, deterministic sorting, and error handling.
+  - ✅ **Two-Stage Recommendation Engine:** Application-level hard filtering (budget cap, category, RAM, dedicated GPU) followed by soft preference utility scoring (0–100 pts).
+  - ✅ **State Tracking & Orchestrator:** Stateful conversation memory across turns, category isolation, and semantic clarification tracking.
+  - ✅ **Dual-Mode Extractor:** Support for Gemini and OpenAI with Pydantic validation, 7s timeout, and regex rule engine.
+  - ✅ **React Frontend:** Chat UI with live State Inspector, product recommendation cards, and trade-off comparison table.
+  - ✅ **Automated Tests:** 20+ automated tests passing with pytest.
 - **What Works:**
-  - Complete 3-turn assessment scenario from Section 3 running seamlessly both via automated tests and live HTTP API.
-  - Hard constraint enforcement guaranteeing zero products above budget.
-  - Dynamic follow-ups (asks for use case and budget when missing; does not ask once known).
-  - Transparent trade-off comparisons across compute, weight, battery, and price.
-  - Honest no-match handling when constraints cannot be satisfied.
-- **Current Limitations / Blockers:**
-  - *Headless Playwright Driver CDN:* Automated browser subagents encountered an external CDN mirror issue downloading the Playwright Windows driver (`playwright-1.57.0-win32_x64.zip` returning 404). The web application itself runs smoothly and is directly testable via any local browser at `http://127.0.0.1:5173`.
-  - *Synthetic Catalog Size:* The catalog currently contains 23 representative synthetic products across 5 categories. Expanding the catalog to 50+ items would provide even deeper variety for niche filters.
-- **What Remains for Day 3 (Final Polish & Google Meet):**
-  - Live demonstration walkthrough and presentation prep for the Google Meet.
-  - Containerization (`Dockerfile` and `docker-compose.yml`) for one-click reviewer evaluation.
-  - Preparing responses for live code modification and debugging during the interview.
-- **How to Run Current Version:**
-  - Follow the [Quickstart Setup Guide](#-quickstart-setup-guide) above (Backend on port 8000, Frontend on port 5173, Pytest with `pytest`).
+  - Multi-turn benchmark conversation from Section 3 (College $\rightarrow$ Programming & ML $\rightarrow$ Around 80k & campus carry $\rightarrow$ Top 2 recommendations strictly within ₹80k).
+  - Mind changes (updating budget mid-conversation).
+  - Category transitions (laptop to monitor/headphones).
+  - Indian currency parsing (`₹1,20,000`, `80k`).
+  - Dynamic database-computed no-match explanations.
+- **Current Limitations & Known Areas for Improvement:**
+  - *Headless Browser Driver in Sandbox:* Automated Playwright browser subagents encountered an external CDN mirror 404 issue downloading Windows driver binaries; local manual browser testing works normally.
+  - *Catalog Depth:* The synthetic catalog has 23 items with depth concentrated in laptops (14 models) and 2–3 items in other categories.
+  - *Rule Engine Primary Usage:* In standard evaluation without an external API key, extraction relies on pattern matching; while robust for common queries, complex phrasing benefits from providing a `GEMINI_API_KEY`.
+- **What Remains for Day 3:**
+  - Expanding the product catalog to 35+ items for richer non-laptop recommendations.
+  - Live demonstration walkthrough rehearsal for the Google Meet.
 
 ### Day 3 Check-in (21 October 2026, Google Meet): Final Submission & Demo
-- **Status:** **Ready for Live Demonstration & Defense**
-- **Artifacts:** Source code repository, passing test suite, final README, SQLite database and seed scripts, and demo walk-through guide in [docs/demo_guide.md](docs/demo_guide.md).
+- **Status:** Ready for live demonstration.
+- **Artifacts:** Source code, automated tests, final README, and interview defense guide in [docs/demo_guide.md](docs/demo_guide.md).

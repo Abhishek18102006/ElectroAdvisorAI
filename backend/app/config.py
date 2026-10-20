@@ -9,20 +9,19 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./catalog.db"
 
     # LLM Settings
-    LLM_PROVIDER: str = "auto"  # "gemini", "openai", "groq", "heuristic", or "auto"
+    LLM_PROVIDER: str = "auto"  # "gemini", "openai", "heuristic", or "auto"
     GEMINI_API_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
     GROQ_API_KEY: Optional[str] = None
     OPENAI_MODEL: str = "gpt-4o-mini"
     GEMINI_MODEL: str = "gemini-1.5-flash"
 
-    # CORS
+    # CORS Configuration
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
-        "http://localhost:3000",
         "http://127.0.0.1:5173",
+        "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "*",
     ]
 
     model_config = SettingsConfigDict(

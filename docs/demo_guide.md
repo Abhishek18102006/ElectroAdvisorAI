@@ -38,20 +38,26 @@ Open `http://127.0.0.1:5173` in your browser. Point to the **Active Requirements
    - **Observe:** State inspector updates `Max Budget: ₹80,000`, `Local ML: True`, `Requires GPU: True (CUDA)`, `RAM >= 16GB`, `Campus Portability: True`.
    - **Agent Response:** Delivers the **Top 2 models** strictly under ₹80,000 with 16GB RAM and RTX GPUs:
      - **Option 1:** *Acer Nitro V 15* (₹76,990) with RTX 4050 6GB.
-     - **Option 2:** *Dell G15 5530* (₹74,990) with RTX 3050 6GB.
+     - **Option 2:** *ASUS TUF Gaming A15* (₹79,990) with RTX 4050 6GB and 90Wh battery.
    - **Trade-Off Matrix:** Displays side-by-side comparison across Graphics Compute, Portability, Battery Endurance, and Price.
    - **Crucial point to highlight to interviewers:** The agent did **not** ask an unnecessary 4th question because requirements were clear!
 
 ---
 
 ### Demo Part 2: Edge Cases & Mind-Changing Mid-Conversation
-1. **Customer Changing Their Mind:**
+1. **Customer Changing Their Mind (Lowering Budget):**
    - **User Input:** *"Actually, my budget changed to ₹60,000."*
    - **Observe:** State inspector immediately updates `Max Budget: ₹60,000`.
-   - **Agent Response:** Transparently explains that dedicated NVIDIA RTX laptops for local ML start at ~₹75,000, and provides the best sub-₹60k programming/cloud ML laptop (e.g. *ASUS Vivobook 15* with Ryzen 5 & 16GB RAM at ₹48,990).
+   - **Agent Response:** Because `local_ml: True` (demanding a dedicated GPU) remains in memory, and dedicated GPU laptops in our catalog start at ₹74,990, the agent outputs an **honest no-match explanation** with dynamic recommendations:
+     > *"Specifically, laptops with your required hardware specifications start at ₹74,990 (Dell G15 5530), whereas your maximum budget is set to ₹60,000.*  
+     > *1. If you run models via cloud platforms (Google Colab, Kaggle, AWS), you can choose a non-GPU laptop like ASUS Vivobook 15 at ₹48,990.*  
+     > *2. If local CUDA training is mandatory, consider adjusting your budget to around ₹75,000.*"
+   - **Follow-up Interaction (Cloud Relaxation):**
+     - User replies: *"I will use cloud platforms instead."*
+     - The agent relaxes the dedicated GPU hard requirement, keeps 16GB RAM for programming, and recommends the **ASUS Vivobook 15** (₹48,990) within the ₹60,000 budget!
 2. **Impossible / Contradictory Constraints:**
-   - **User Input:** *"I want a laptop with an RTX 4090 and 32GB RAM under ₹30,000."*
-   - **Agent Response:** Honest `no_match` response explaining that flagship RTX 4090 models cost significantly more, offering concrete suggestions (cloud instances vs adjusting budget) rather than hallucinating nonexistent products.
+   - **User Input:** *"I need a gaming laptop with an RTX 4090 and 32GB RAM under ₹30,000."*
+   - **Agent Response:** Immediate honest `no_match` response explaining that flagship RTX 4090 configurations cost significantly more, offering concrete suggestions rather than hallucinating nonexistent products.
 3. **Database Catalog & Architecture Modals:**
    - Click the **"Catalog"** button in the header to demonstrate the 23+ seeded database records with instant search and category filtering.
    - Click the **"Architecture"** button to show the embedded Mermaid and ASCII diagrams.

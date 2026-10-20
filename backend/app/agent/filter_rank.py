@@ -27,6 +27,7 @@ class FilterAndRankingEngine:
         min_ram_gb = hard_constraints.get("min_ram_gb")
         requires_gpu = hard_constraints.get("requires_gpu")
         required_os = hard_constraints.get("required_os")
+        user_uses = [u.lower() for u in state.get("primary_uses", [])]
 
         eligible = []
         violations = {
@@ -62,27 +63,35 @@ class FilterAndRankingEngine:
 
             specs = prod.specs or {}
 
-            # 5. RAM check
-            if min_ram_gb is not None:
-                prod_ram = specs.get("ram_gb", 0)
-                if prod_ram < min_ram_gb:
-                    violations["insufficient_ram"] += 1
-                    continue
+            # Category-specific hardware checks (only for laptops)
+            if category == "laptop":
+                # 5. RAM check
+                if min_ram_gb is not None:
+                    prod_ram = specs.get("ram_gb", 0)
+                    if prod_ram < min_ram_gb:
+                        violations["insufficient_ram"] += 1
+                        continue
 
-            # 6. GPU check
-            if requires_gpu is True:
-                gpu_type = specs.get("gpu_type", "").lower()
-                # Unified memory on Apple silicon is treated as capable for general compute, but for CUDA local ML dedicated NVIDIA is preferred
-                if gpu_type not in ["dedicated", "unified"]:
-                    violations["missing_dedicated_gpu"] += 1
-                    continue
+                # 6. GPU check
+                if requires_gpu is True:
+                    gpu_type = specs.get("gpu_type", "").lower()
+                    if "gaming" in user_uses:
+                        # For gaming, dedicated GPU is strictly mandatory (no Apple unified or integrated)
+                        if gpu_type != "dedicated":
+                            violations["missing_dedicated_gpu"] += 1
+                            continue
+                    else:
+                        # For general ML / compute, allow dedicated GPU or Apple unified memory (Metal MPS)
+                        if gpu_type not in ["dedicated", "unified"]:
+                            violations["missing_dedicated_gpu"] += 1
+                            continue
 
-            # 7. OS check
-            if required_os:
-                prod_os = specs.get("os", "").lower()
-                if required_os.lower() not in prod_os:
-                    violations["os_mismatch"] += 1
-                    continue
+                # 7. OS check
+                if required_os:
+                    prod_os = specs.get("os", "").lower()
+                    if required_os.lower() not in prod_os:
+                        violations["os_mismatch"] += 1
+                        continue
 
             eligible.append(prod)
 
@@ -96,12 +105,15 @@ class FilterAndRankingEngine:
     ) -> Tuple[float, Dict[str, float]]:
         """
         Calculates a transparent, multi-dimensional alignment score (0 - 100) for a product.
+        Formula matches documentation:
+        Score = Use_Case (40) + Portability (20) + Battery (15) + Value (15) + Rating (10) = 100
         """
         specs = product.specs or {}
         intended_uses = product.intended_uses or []
         user_uses = [u.lower() for u in state.get("primary_uses", [])]
         preferences = state.get("preferences", {})
         budget_max = state.get("budget_max")
+        category = state.get("category", "laptop")
 
         score_breakdown = {
             "use_case_score": 0.0,
@@ -112,19 +124,15 @@ class FilterAndRankingEngine:
         }
 
         # 1. Use-Case Fit (up to 40 pts)
-        use_matches = 0
-        for u in user_uses:
-            if u in intended_uses:
-                use_matches += 1
-
+        use_matches = sum(1 for u in user_uses if u in intended_uses)
         if user_uses:
             match_ratio = use_matches / len(user_uses)
-            score_breakdown["use_case_score"] += match_ratio * 30.0
+            score_breakdown["use_case_score"] = match_ratio * 30.0
         else:
-            score_breakdown["use_case_score"] += 15.0  # neutral
+            score_breakdown["use_case_score"] = 20.0
 
         # Extra bonus for machine learning hardware
-        if "machine_learning" in user_uses:
+        if "machine_learning" in user_uses and category == "laptop":
             vram = specs.get("vram_gb", 0)
             if vram >= 6:
                 score_breakdown["use_case_score"] += 10.0
@@ -134,18 +142,24 @@ class FilterAndRankingEngine:
         # 2. Portability Score (up to 20 pts)
         weight_kg = specs.get("weight_kg", 2.0)
         portability_requested = preferences.get("portability", False)
+        max_weight_target = preferences.get("max_weight_kg", 1.8 if portability_requested else 2.5)
 
         if weight_kg <= 1.35:
             base_port = 20.0
         elif weight_kg <= 1.65:
-            base_port = 15.0
+            base_port = 16.0
         elif weight_kg <= 2.15:
-            base_port = 8.0
+            base_port = 12.0
+        elif weight_kg <= 2.4:
+            base_port = 7.0
         else:
             base_port = 2.0
 
-        # Amplify portability weight if customer specified campus mobility
-        score_breakdown["portability_score"] = base_port * (1.2 if portability_requested else 0.8)
+        # Penalty if exceeding explicitly targeted max weight
+        if weight_kg > max_weight_target:
+            base_port = max(2.0, base_port - 5.0)
+
+        score_breakdown["portability_score"] = min(20.0, base_port)
 
         # 3. Battery Life Score (up to 15 pts)
         battery_hours = specs.get("battery_life_hours", 6.0)
@@ -154,20 +168,19 @@ class FilterAndRankingEngine:
         elif battery_hours >= 9.0:
             score_breakdown["battery_score"] = 12.0
         elif battery_hours >= 6.5:
-            score_breakdown["battery_score"] = 8.0
+            score_breakdown["battery_score"] = 9.0
         else:
             score_breakdown["battery_score"] = 4.0
 
         # 4. Value / Budget Utilization (up to 15 pts)
         if budget_max and budget_max > 0:
-            # Reward maximizing specs within budget
             price_ratio = product.price / budget_max
             if 0.70 <= price_ratio <= 1.0:
                 score_breakdown["value_score"] = 15.0
             elif 0.50 <= price_ratio < 0.70:
-                score_breakdown["value_score"] = 12.0
+                score_breakdown["value_score"] = 11.0
             else:
-                score_breakdown["value_score"] = 8.0
+                score_breakdown["value_score"] = 7.0
         else:
             score_breakdown["value_score"] = 10.0
 
@@ -182,8 +195,8 @@ class FilterAndRankingEngine:
                 + score_breakdown["battery_score"]
                 + score_breakdown["value_score"]
                 + score_breakdown["rating_score"],
-                2
-            )
+                2,
+            ),
         )
 
         return total_score, score_breakdown
@@ -196,6 +209,8 @@ class FilterAndRankingEngine:
     ) -> List[Tuple[Product, float, Dict[str, float]]]:
         """
         Ranks compliant products and selects the top 2 products with complementary trade-offs.
+        Guarantees that diversity selection does NOT pick an objectively worse/heavier candidate
+        when the customer requested portability.
         """
         if not eligible_products:
             return []
@@ -211,19 +226,27 @@ class FilterAndRankingEngine:
         if len(scored) <= 2:
             return scored
 
-        # Top product is the highest overall scorer
         top_1 = scored[0]
-
-        # For Top 2, select a product that offers a meaningful alternative
-        # e.g., if Top 1 is heavy/high-performance, look for the highest scoring portable or alternative option
+        portability_requested = state.get("preferences", {}).get("portability", False)
         top_1_weight = top_1[0].specs.get("weight_kg", 2.0)
-        top_2 = scored[1]
 
-        # Check if there is another strong contender with a distinctly different strength (e.g. much lighter, or larger battery)
-        for candidate in scored[1:4]:
-            cand_weight = candidate[0].specs.get("weight_kg", 2.0)
-            if abs(cand_weight - top_1_weight) >= 0.4:
-                top_2 = candidate
-                break
+        # Look for the best complementary runner-up
+        top_2 = scored[1]  # Default to natural second highest scorer
+
+        if portability_requested:
+            # If portability was requested, look for a candidate that is significantly LIGHTER than top 1
+            for candidate in scored[1:4]:
+                cand_weight = candidate[0].specs.get("weight_kg", 2.0)
+                if cand_weight < top_1_weight - 0.25:
+                    top_2 = candidate
+                    break
+        else:
+            # If performance or screen is priority, look for a candidate that offers a distinct spec advantage
+            top_1_gpu = top_1[0].specs.get("gpu", "")
+            for candidate in scored[1:4]:
+                cand_gpu = candidate[0].specs.get("gpu", "")
+                if cand_gpu != top_1_gpu:
+                    top_2 = candidate
+                    break
 
         return [top_1, top_2]

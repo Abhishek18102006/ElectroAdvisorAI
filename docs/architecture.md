@@ -141,10 +141,11 @@ graph TD
   - Target category matching (`laptop`, `smartphone`, etc.)
   - Minimum RAM and dedicated GPU checks for compute-heavy workloads (local machine learning or gaming).
 - **Stage 2 (Soft Preference Ranking):** Multi-factor scoring (0–100 points) based on:
-  - Use-case alignment (0–40 pts)
-  - Portability & battery preferences (0–30 pts)
-  - Budget value optimization (0–20 pts)
-  - Customer rating (0–10 pts)
+  - Use-case alignment (up to 40 pts: 30 base match + 10 dedicated ML GPU bonus)
+  - Portability & weight (up to 20 pts: based on weight vs max target)
+  - Battery endurance (up to 15 pts)
+  - Budget value optimization (up to 15 pts)
+  - Customer rating (up to 10 pts)
 - **Top 2 Selection & Trade-Off Explainer:** Selects the top complementary products and articulates real-world trade-offs (performance vs weight vs battery).
 
 ### 3.5 Data Layer (SQLite Database)

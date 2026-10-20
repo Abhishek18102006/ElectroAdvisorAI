@@ -25,7 +25,7 @@ def test_state_tracking_and_mind_change():
     state = create_initial_state()
 
     # Turn 1: User mentions coursework and programming
-    extracted_1 = RequirementsExtractor.extract_with_rules("I need a laptop for programming and machine learning.")
+    extracted_1 = RequirementsExtractor.extract_with_rules("I need a laptop for programming and machine learning with dedicated GPU.")
     state = StateManager.update_state(state, extracted_1)
 
     assert "programming" in state["primary_uses"]

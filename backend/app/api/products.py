@@ -21,6 +21,12 @@ def list_products(
     limit: int = Query(10, ge=1, le=100, description="Items per page"),
     db: Session = Depends(get_db),
 ):
+    if min_price is not None and max_price is not None and min_price > max_price:
+        raise HTTPException(
+            status_code=422,
+            detail="min_price cannot be greater than max_price",
+        )
+
     query = db.query(Product)
 
     if category:
@@ -47,7 +53,9 @@ def list_products(
 
     total = query.count()
     offset = (page - 1) * limit
-    items = query.offset(offset).limit(limit).all()
+    
+    # Deterministic sorting by product ID
+    items = query.order_by(Product.id.asc()).offset(offset).limit(limit).all()
 
     pages = (total + limit - 1) // limit if total > 0 else 0
 
