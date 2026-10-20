@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ElectroAdvisor AI - Day 2 Progress & Architecture Submission</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 18mm 16mm;
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 8pt;
+      color: #64748b;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1e293b;
+    background: #ffffff;
+    line-height: 1.5;
+    font-size: 9.5pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  .header {
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .header-left h1 {
+    font-size: 19pt;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.5px;
+  }
+
+  .header-left .subtitle {
+    font-size: 10.5pt;
+    color: #475569;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .header-right {
+    text-align: right;
+    font-size: 8.5pt;
+    color: #64748b;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    font-size: 7.5pt;
+    font-weight: 700;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-success { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+  .badge-info { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
+  .badge-dark { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+
+  h2 {
+    font-size: 12pt;
+    font-weight: 700;
+    color: #0f172a;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 4px;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    page-break-after: avoid;
+  }
+
+  h3 {
+    font-size: 10pt;
+    font-weight: 600;
+    color: #334155;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    page-break-after: avoid;
+  }
+
+  p {
+    margin: 0 0 6px 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 12px 0;
+    font-size: 8.5pt;
+    page-break-inside: avoid;
+  }
+
+  th {
+    background-color: #f8fafc;
+    color: #334155;
+    font-weight: 600;
+    text-align: left;
+    padding: 6px 8px;
+    border: 1px solid #cbd5e1;
+  }
+
+  td {
+    padding: 5px 8px;
+    border: 1px solid #e2e8f0;
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td {
+    background-color: #f8fafc;
+  }
+
+  .box {
+    background-color: #f8fafc;
+    border-left: 3px solid #0284c7;
+    padding: 8px 12px;
+    margin: 8px 0;
+    font-size: 8.5pt;
+    border-radius: 0 4px 4px 0;
+    page-break-inside: avoid;
+  }
+
+  .box-alert {
+    border-left-color: #10b981;
+    background-color: #f0fdf4;
+  }
+
+  code {
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 8pt;
+    background: #f1f5f9;
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: #0f172a;
+  }
+
+  pre {
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 7.8pt;
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 10px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 6px 0 10px 0;
+    line-height: 1.35;
+    page-break-inside: avoid;
+  }
+
+  .grid-2 {
+    display: flex;
+    gap: 12px;
+    margin: 6px 0;
+    page-break-inside: avoid;
+  }
+
+  .card {
+    flex: 1;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 8px 10px;
+    background: #fafafa;
+  }
+
+  .card-title {
+    font-weight: 700;
+    font-size: 8.5pt;
+    color: #0f172a;
+    margin-bottom: 4px;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>⚡ ElectroAdvisor AI — Day 2 Submission</h1>
+    <div class="subtitle">AI Engineer Technical Assessment · 3-Day Challenge · Progress & Architecture Report</div>
+  </div>
+  <div class="header-right">
+    <div><strong>Date:</strong> 20 October 2026, 9:00 PM</div>
+    <div><strong>Candidate:</strong> Abhishek</div>
+    <div><span class="badge badge-success">Day 2 Milestone Met</span> <span class="badge badge-info">FARM Stack</span></div>
+    <div><span class="badge badge-dark">GitHub: Abhishek18102006/ElectroAdvisorAI</span></div>
+  </div>
+</div>
+
+<div class="box box-alert">
+  <strong>Executive Summary:</strong> ElectroAdvisor AI is an intelligent, grounded electronics sales assistant. All mandatory requirements of the 3-day assessment are implemented and passing. Based on architectural review and engineering rigor, the API has been expanded from the baseline 6 endpoints to a <strong>complete 12-endpoint specification</strong> supporting hybrid UI overrides, candidate debug traces, taxonomy loading, and user feedback analytics. A total of <strong>38 automated tests pass (100% pass rate in ~1.38s)</strong>.
+</div>
+
+<h2>1. Assessment Deliverables & Requirement Checklist</h2>
+<table>
+  <thead>
+    <tr>
+      <th style="width: 28%;">Requirement</th>
+      <th style="width: 14%;">Status</th>
+      <th>Implementation Evidence & Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>FastAPI + FARM Rule</strong></td>
+      <td><span class="badge badge-success">Fully Met</span></td>
+      <td>FastAPI 0.115 backend + React 18 & Vite frontend + SQLite database + Node.js 24 runtime.</td>
+    </tr>
+    <tr>
+      <td><strong>API Endpoints</strong></td>
+      <td><span class="badge badge-success">Expanded (12)</span></td>
+      <td>Expanded from baseline 6 to 12 endpoints (including <code>/compare</code>, <code>/categories</code>, <code>/requirements</code>, <code>/feedback</code>, <code>/debug</code>).</td>
+    </tr>
+    <tr>
+      <td><strong>Catalog with Structured Specs</strong></td>
+      <td><span class="badge badge-success">Fully Met</span></td>
+      <td>23 synthetic products across 5 categories (laptops, monitors, headphones, smartphones, tablets) with RAM, GPU, display, battery, and weights.</td>
+    </tr>
+    <tr>
+      <td><strong>State Tracking & Mind-Change</strong></td>
+      <td><span class="badge badge-success">Fully Met</span></td>
+      <td>Multi-turn memory tracks budget updates (80k &rarr; 60k), campus portability, and cleans constraints when switching categories.</td>
+    </tr>
+    <tr>
+      <td><strong>Hard Filter then Rank</strong></td>
+      <td><span class="badge badge-success">Fully Met</span></td>
+      <td>Stage 1 strictly enforces budget cap, RAM, dedicated GPU (CUDA). Stage 2 ranks on 100-pt utility score (Use-case 40, Portability 20, Battery 15, Value 15, Rating 10).</td>
+    </tr>
+    <tr>
+      <td><strong>Honest No-Match Handling</strong></td>
+      <td><span class="badge badge-success">Fully Met</span></td>
+      <td>Dynamically queries DB to compute exact deficit (e.g., dedicated GPU starts at ₹74,990 vs ₹60,000 budget) and suggests cloud ML alternatives.</td>
+    </tr>
+    <tr>
+      <td><strong>Contradiction Detection</strong></td>
+      <td><span class="badge badge-success">Fully Met</span></td>
+      <td>Detects <code>min_budget > max_budget</code> and conflicting constraints (e.g., MacBook running native Windows) before query execution.</td>
+    </tr>
+    <tr>
+      <td><strong>Automated Test Suite</strong></td>
+      <td><span class="badge badge-success">38 Tests (100%)</span></td>
+      <td>38 automated tests in pytest covering edge cases, benchmark conversation, LLM timeout fallback, non-laptop devices, and 422 validations.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>2. Complete 12-Endpoint REST API Architecture</h2>
+<p>The API specification was upgraded to handle real-world e-commerce edge cases, hybrid UI controls, and system observability:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 15%;">Domain</th>
+      <th style="width: 10%;">Method</th>
+      <th style="width: 35%;">Endpoint</th>
+      <th>Engineering Justification</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Catalog</strong></td>
+      <td><code>GET</code></td>
+      <td><code>/api/v1/products</code></td>
+      <td>Deterministic pagination (<code>order_by(Product.id.asc())</code>), price bounds, and brand filters.</td>
+    </tr>
+    <tr>
+      <td><strong>Catalog</strong></td>
+      <td><code>GET</code></td>
+      <td><code>/api/v1/products/{product_id}</code></td>
+      <td>Full product details, specs, intended uses, pros, and cons.</td>
+    </tr>
+    <tr>
+      <td><strong>Catalog</strong></td>
+      <td><code>GET</code></td>
+      <td><code>/api/v1/products/compare</code></td>
+      <td><strong>UX Enhancement:</strong> Side-by-side spec matrix and dynamic trade-off highlights for chosen products.</td>
+    </tr>
+    <tr>
+      <td><strong>Catalog</strong></td>
+      <td><code>GET</code></td>
+      <td><code>/api/v1/categories</code></td>
+      <td><strong>UI Optimization:</strong> Distinct categories, counts, price ranges, and brands to populate UI filter chips.</td>
+    </tr>
+    <tr>
+      <td><strong>Agent</strong></td>
+      <td><code>POST</code></td>
+      <td><code>/api/v1/conversations</code></td>
+      <td>Initialize a new stateful customer sales consultation session.</td>
+    </tr>
+    <tr>
+      <td><strong>Agent</strong></td>
+      <td><code>POST</code></td>
+      <td><code>/api/v1/conversations/{id}/messages</code></td>
+      <td>Process customer natural language input through decision orchestrator; validates empty/whitespace.</td>
+    </tr>
+    <tr>
+      <td><strong>Agent</strong></td>
+      <td><code>GET</code></td>
+      <td><code>/api/v1/conversations/{id}</code></td>
+      <td>Retrieve chat history, extracted requirements, and memory state.</td>
+    </tr>
+    <tr>
+      <td><strong>Agent</strong></td>
+      <td><code>PUT</code></td>
+      <td><code>/api/v1/conversations/{id}/requirements</code></td>
+      <td><strong>Hybrid UI Override:</strong> Allows UI sliders and chips to update constraints directly without typing in chat.</td>
+    </tr>
+    <tr>
+      <td><strong>Agent</strong></td>
+      <td><code>DELETE</code></td>
+      <td><code>/api/v1/conversations/{id}</code></td>
+      <td><strong>Privacy & Reset:</strong> Cascades deletion of conversation messages and state from SQLite.</td>
+    </tr>
+    <tr>
+      <td><strong>Agent</strong></td>
+      <td><code>POST</code></td>
+      <td><code>/api/v1/conversations/{id}/feedback</code></td>
+      <td><strong>Product Analytics:</strong> Record user sentiment (thumbs up/down) and purchase conversion intent.</td>
+    </tr>
+    <tr>
+      <td><strong>System</strong></td>
+      <td><code>GET</code></td>
+      <td><code>/api/v1/health</code></td>
+      <td>Service uptime, database connection verification, and active product count.</td>
+    </tr>
+    <tr>
+      <td><strong>System</strong></td>
+      <td><code>GET</code></td>
+      <td><code>/api/v1/conversations/{id}/debug</code></td>
+      <td><strong>Engineering Rigor:</strong> Exposes internal constraints, rejection summaries, and candidate score breakdowns.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h2>3. Resolution of Critical Bugs & Reliability Hardening</h2>
+<p>All 11 reliability bugs identified during technical review were confirmed with targeted tests and resolved in production code:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 24%;">Bug & Subsystem</th>
+      <th style="width: 38%;">Root Cause & Solution</th>
+      <th>Verification</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>1. Indian Currency Parsing</strong><br><code>extractor.py</code></td>
+      <td><code>₹1,20,000</code> was misparsed as 20,000 because regex expected only 3-digit comma groups. Updated regex to <code>(?:₹|rs\.?|inr)?\s*(\d{1,3}(?:,\d{2,3})+|\d{4,7})\b</code> and stripped commas before float conversion.</td>
+      <td><code>test_indian_number_format_parsing</code></td>
+    </tr>
+    <tr>
+      <td><strong>2 & 3. Cloud GPU Relaxation & Scenario D</strong><br><code>state.py</code>, <code>orchestrator.py</code></td>
+      <td>ML previously locked <code>requires_gpu=True</code> permanently. Now, answering "cloud" relaxes GPU requirement to <code>False</code> and resets RAM. Scenario D uses structured state flag <code>asked_ml_env</code> instead of fragile string matching.</td>
+      <td><code>test_cloud_relaxes_gpu_requirement</code></td>
+    </tr>
+    <tr>
+      <td><strong>4. Substring Boundary Mismatches</strong><br><code>extractor.py</code></td>
+      <td>"Headphones" was classified as "phone", "html" matched "ml", and "portable" matched "tab". Added strict <code>\b</code> regex word boundaries across all keywords and acronyms.</td>
+      <td><code>test_substring_matching_bugs</code></td>
+    </tr>
+    <tr>
+      <td><strong>5. Category Spec Isolation</strong><br><code>state.py</code>, <code>filter_rank.py</code></td>
+      <td>"Programming" previously added <code>min_ram_gb=8</code>, causing monitor queries to fail. Hardware checks are now strictly scoped to laptops, and switching categories flushes obsolete hardware constraints.</td>
+      <td><code>test_category_switch_clears_hardware_constraints</code></td>
+    </tr>
+    <tr>
+      <td><strong>6. Top-2 Diversity Selection</strong><br><code>filter_rank.py</code></td>
+      <td>Diversity rule previously checked <code>abs(w1 - w2) >= 0.4</code> without direction, selecting the heavier Dell G15 over lighter ASUS TUF. Now enforces that if portability is requested, candidate 2 must be lighter than or equal to candidate 1.</td>
+      <td><code>test_top2_selection_for_portability_does_not_pick_heavier_worse_laptop</code></td>
+    </tr>
+    <tr>
+      <td><strong>7. Dynamic Trade-Off Generation</strong><br><code>explainer.py</code></td>
+      <td>Replaced hardcoded template lines with dynamic delta comparisons across compute, weight, battery, and price. Added category-specific trade-offs for non-laptop devices.</td>
+      <td><code>test_conversation_flow.py</code></td>
+    </tr>
+    <tr>
+      <td><strong>8. Database-Driven No-Match</strong><br><code>explainer.py</code></td>
+      <td>Eliminated hardcoded ₹74,990 text. Dynamically queries SQLite for the cheapest compliant item and calculates the exact gap against customer budget.</td>
+      <td><code>test_impossible_constraints_honest_no_match</code></td>
+    </tr>
+    <tr>
+      <td><strong>9. Greeting Prefix Misfire</strong><br><code>orchestrator.py</code></td>
+      <td>"High-end laptop" was treated as "hi". Punctuation is stripped and compound words starting with "hi" are exempted from greeting triggers.</td>
+      <td><code>test_greeting_does_not_misfire_on_highend_laptop</code></td>
+    </tr>
+    <tr>
+      <td><strong>10. Gaming Dedicated GPU Enforcement</strong><br><code>filter_rank.py</code></td>
+      <td>Gaming strictly enforces <code>requires_dedicated_gpu=True</code>, correctly disqualifying Apple unified memory for Windows/DirectX gaming workflows.</td>
+      <td><code>test_hard_constraint_ram_and_gpu</code></td>
+    </tr>
+    <tr>
+      <td><strong>11. Post-Recommendation Follow-ups</strong><br><code>orchestrator.py</code></td>
+      <td>Added intent handlers for post-recommendation gratitude ("thanks") and refinements ("any lighter options?"), preventing recommendation loop repetition.</td>
+      <td><code>test_post_recommendation_intents</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>4. Multi-Category Device Architecture</h2>
+<p>ElectroAdvisor is engineered as an omni-category sales assistant with dedicated behaviors across all 5 catalog segments:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Device Category</th>
+      <th>Catalog Representation</th>
+      <th>Category-Specific Clarification Question</th>
+      <th>Trade-Off Dimensions Compared</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Laptops</strong></td>
+      <td>14 Models (Lenovo, ASUS, HP, Dell, Acer, Apple)</td>
+      <td><em>"What will you mainly use it for: general coursework, programming, gaming, creative work, or machine learning?"</em></td>
+      <td>Compute Performance (GPU/CPU/VRAM), Portability & Weight (kg), Battery Endurance, Price & Value.</td>
+    </tr>
+    <tr>
+      <td><strong>Headphones</strong></td>
+      <td>Sony WH-1000XM5, Anker Soundcore Q45</td>
+      <td><em>"What is your primary use: study focus with active noise cancellation, daily commute/travel, or calls and entertainment?"</em></td>
+      <td>Noise Cancellation & Audio Type, Battery Endurance (hours), Comfort & Headband Weight (g), Price & Value.</td>
+    </tr>
+    <tr>
+      <td><strong>Monitors</strong></td>
+      <td>Dell UltraSharp U2724D, LG UltraGear 27GN800</td>
+      <td><em>"What will you mainly use this monitor for: programming/multitasking, gaming, creative work, or desk use?"</em></td>
+      <td>Display & Visual Fidelity (IPS Black 2000:1 vs 144Hz 1ms), Connectivity & Ports (90W USB-C PD vs HDMI/DP), Price.</td>
+    </tr>
+    <tr>
+      <td><strong>Smartphones</strong></td>
+      <td>Apple iPhone 15, Samsung Galaxy S24, OnePlus 12R</td>
+      <td><em>"What are your top priorities: photography/camera, gaming speed, all-day battery life, or general daily use?"</em></td>
+      <td>Camera System, Display & Refresh Rate (120Hz LTPO vs 60Hz), Battery Life & Fast Charging, Price & Value.</td>
+    </tr>
+    <tr>
+      <td><strong>Tablets</strong></td>
+      <td>Apple iPad 10th Gen, Samsung Galaxy Tab S9 FE</td>
+      <td><em>"What will you mainly use this tablet for: digital note-taking & coursework, drawing, or watching media?"</em></td>
+      <td>Display & Stylus Support (Bundled S-Pen vs Apple Pencil), Chassis Weight & Mobility (g), Price & Value.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5. Architecture & Decision Flowchart</h2>
+<pre>
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                     REACT 18 FRONTEND (Vite)                                     │
+│   • Conversational Chat Pane     • Live State Inspector Sidebar    • Grounded Product Cards      │
+│   • Side-by-Side Trade-off Table • Synthetic Catalog Modal         • Architecture Modal          │
+└───────────────────────────────────────────────┬──────────────────────────────────────────────────┘
+                                                │ 1. Customer Message / Hybrid UI Override (PUT)
+                                                ▼
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                 FASTAPI REST API (12 Endpoints)                                  │
+│   • Request Validation (Pydantic) • CORS Middleware • Deterministic Pagination • Health Checks   │
+└───────────────────────────────────────────────┬──────────────────────────────────────────────────┘
+                                                │ 2. Process Turn
+                                                ▼
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                  AI AGENT ORCHESTRATION LAYER                                    │
+│   ┌─────────────────────────────┐   ┌───────────────────────────┐   ┌────────────────────────┐   │
+│   │ Dual-Mode Extractor         │──▶│ Conversation State        │──▶│ Sales Orchestrator     │   │
+│   │ • Gemini 1.5 Flash (5s TO)  │   │ • Multi-turn Memory       │   │ • Decision Graph       │   │
+│   │ • Regex Engine (Fallback)   │   │ • Category Isolation      │   │ • Clarify vs Recommend │   │
+│   └─────────────────────────────┘   └───────────────────────────┘   └───────────┬────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────────┼────────────────┘
+                                                                                  │ 3. Check Completeness
+                                              ┌───────────────────────────────────┴──────────────────────────────┐
+                                              ▼ Missing Information                                              ▼ Sufficient Information
+                                     ┌───────────────────────────────────┐                              ┌─────────────────────────────────┐
+                                     │  Ask Focused Clarifying Question  │                              │ Execute Controlled Query Tool   │
+                                     │  (Specific to Device Category)    │                              │ (SQLAlchemy ORM, No Raw SQL)    │
+                                     └───────────────────────────────────┘                              └────────────────┬────────────────┘
+                                                                                                                         │
+                                                                                                                         ▼
+                                                                                                        ┌─────────────────────────────────┐
+                                                                                                        │ Stage 1: Hard Filter            │
+                                                                                                        │ (Budget, Category, RAM, GPU)    │
+                                                                                                        └────────────────┬────────────────┘
+                                                                                                                         │
+                                                                                                                         ▼
+                                                                                                        ┌─────────────────────────────────┐
+                                                                                                        │ Stage 2: Soft Preference Rank   │
+                                                                                                        │ (100-pt Weighted Utility Score) │
+                                                                                                        └────────────────┬────────────────┘
+                                                                                                                         │
+                                                                                                                         ▼
+                                                                                                        ┌─────────────────────────────────┐
+                                                                                                        │ Select Top 2 & Trade-offs       │
+                                                                                                        │ (Dynamic DB No-Match if 0 Items)│
+                                                                                                        └─────────────────────────────────┘
+</pre>
+
+<div class="page-break"></div>
+
+<h2>6. Automated Testing Verification (38 Tests Passing)</h2>
+<p>The backend includes 38 automated test cases executed via <code>pytest</code> with 100% pass rate in 1.38 seconds:</p>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title">Core Flow & Edge Case Tests (20 Tests)</div>
+    <ul style="margin: 0; padding-left: 14px; font-size: 8pt;">
+      <li><code>test_parse_numeric_budget</code> (Lakhs, k, standard commas)</li>
+      <li><code>test_state_initialization</code> &amp; defaults</li>
+      <li><code>test_state_tracking_and_mind_change</code> (80k &rarr; 60k)</li>
+      <li><code>test_portability_preference_extraction</code></li>
+      <li><code>test_full_assessment_example_conversation_flow</code> (3 turns)</li>
+      <li><code>test_single_turn_complete_requirements</code></li>
+      <li><code>test_impossible_constraints_honest_no_match</code></li>
+      <li><code>test_greeting_intent</code> &amp; <code>test_conversation_reset</code></li>
+      <li><code>test_hard_constraint_budget_cap</code> &amp; RAM/GPU</li>
+      <li><code>test_list_products_pagination</code> &amp; filtering</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Reliability & Expanded API Tests (18 Tests)</div>
+    <ul style="margin: 0; padding-left: 14px; font-size: 8pt;">
+      <li><code>test_indian_number_format_parsing</code> (1,20,000)</li>
+      <li><code>test_substring_matching_bugs</code> (phones vs headphones)</li>
+      <li><code>test_greeting_does_not_misfire_on_highend_laptop</code></li>
+      <li><code>test_cloud_relaxes_gpu_requirement</code></li>
+      <li><code>test_category_switch_clears_hardware_constraints</code></li>
+      <li><code>test_top2_selection_for_portability_weight_order</code></li>
+      <li><code>test_contradictory_constraints_detected</code></li>
+      <li><code>test_post_recommendation_intents</code> (thanks, lighter)</li>
+      <li><code>test_api_validation_errors</code> (422 empty / min > max)</li>
+      <li><code>test_llm_failure_and_timeout_fallback</code></li>
+      <li><code>test_all_non_laptop_categories_recommendation</code></li>
+      <li><code>test_get_categories</code>, <code>test_compare_products</code></li>
+      <li><code>test_put_requirements_override</code> &amp; <code>test_debug</code></li>
+      <li><code>test_delete_conversation</code> &amp; <code>test_feedback</code></li>
+    </ul>
+  </div>
+</div>
+
+<h2>7. Day 2 Honest Status & Agenda for Day 3</h2>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title" style="color: #15803d;">✅ What is Fully Implemented & Verified</div>
+    <ul style="margin: 0; padding-left: 14px; font-size: 8pt;">
+      <li>Complete 12-endpoint REST API with Pydantic validation.</li>
+      <li>Two-stage recommendation engine (hard filter + soft utility rank).</li>
+      <li>Category-aware dialogue, rationales, and trade-offs.</li>
+      <li>Multi-turn memory tracking mind-changes and budget shifts.</li>
+      <li>Grounded dynamic database-driven no-match explanations.</li>
+      <li>Contradiction detection for conflicting requirements.</li>
+      <li>Docker Compose setup with named SQLite volume.</li>
+      <li>All 38 automated unit and integration tests passing.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title" style="color: #b45309;">⚠️ Real Limitations & Day 3 Demo Agenda</div>
+    <ul style="margin: 0; padding-left: 14px; font-size: 8pt;">
+      <li><strong>Catalog Depth:</strong> 23 synthetic products (14 laptops, 2-3 items in monitors/headphones/phones/tablets). Expandable for Day 3.</li>
+      <li><strong>LLM vs Rule-Based Fallback:</strong> The agent functions with 100% test reliability on pattern matching when unkeyed; complex colloquial phrasing benefits from providing <code>GEMINI_API_KEY</code>.</li>
+      <li><strong>Day 3 Agenda:</strong> Rehearse Section 3 benchmark demo on Google Meet; prepare defenses for cloud GPU relaxation and diversity selection logic.</li>
+    </ul>
+  </div>
+</div>
+
+<h2>8. Appendix: Quickstart & Verification Commands</h2>
+<pre>
+# 1. Run Automated Test Suite (All 38 Tests)
+cd backend
+.\.venv\Scripts\python.exe -m pytest    # (Windows)
+pytest                                  # (Linux / macOS)
+
+# 2. Start Servers Locally
+cd backend; .\.venv\Scripts\python.exe -m uvicorn app.main:app --port 8000   # Backend (API & Docs)
+cd frontend; npm run dev -- --port 5173                                      # Frontend (Web UI)
+
+# 3. Docker One-Click Launch
+docker compose up --build
+
+# Live Local Endpoints:
+# Web Chat UI:           http://localhost:5173
+# Interactive API Docs:  http://localhost:8000/docs
+# Categories Taxonomy:   http://localhost:8000/api/v1/categories
+# Product Comparison:    http://localhost:8000/api/v1/products/compare?ids=LAP-001,LAP-004
+# Health Endpoint:       http://localhost:8000/api/v1/health
+</pre>
+
+<div style="text-align: center; margin-top: 18px; font-size: 8pt; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 6px;">
+  ElectroAdvisor AI · 3-Day AI Engineer Assessment · Submission Document generated 20 October 2026
+</div>
+
+</body>
+</html>

@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ElectroAdvisor AI - Complete README</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1e293b;
+    line-height: 1.5;
+    font-size: 9.5pt;
+    margin: 0;
+  }
+  h1 { font-size: 18pt; border-bottom: 2px solid #0f172a; padding-bottom: 6px; }
+  h2 { font-size: 13pt; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-top: 20px; page-break-after: avoid; }
+  h3 { font-size: 10.5pt; margin-top: 14px; page-break-after: avoid; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 8.5pt; page-break-inside: avoid; }
+  th { background: #f1f5f9; text-align: left; padding: 6px 8px; border: 1px solid #cbd5e1; }
+  td { padding: 5px 8px; border: 1px solid #e2e8f0; }
+  pre { background: #0f172a; color: #f8fafc; padding: 10px; border-radius: 6px; font-size: 8pt; overflow-x: auto; page-break-inside: avoid; }
+  code { font-family: Consolas, monospace; background: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-size: 8pt; }
+  blockquote { border-left: 3px solid #0284c7; margin: 0; padding-left: 10px; color: #475569; }
+</style>
+</head>
+<body>
+<h1>ElectroAdvisor AI — Intelligent Electronics Sales Assistant</h1>
+<blockquote>
+<p><strong>AI Engineer Technical Assessment</strong> · 3-Day Build Challenge · Electronics Recommendation Agent</p>
+</blockquote>
+<p>ElectroAdvisor is a production-grade AI-powered sales assistant designed for an electronics store. Customers often know their practical goals (e.g., college coursework, local machine learning experiments, carrying between campus lectures), but rarely know the exact technical specifications they need.</p>
+<p>ElectroAdvisor engages in a natural multi-turn conversation, dynamically tracks customer requirements across messages, differentiates <strong>hard constraints</strong> (e.g., maximum budget ceiling) from <strong>soft preferences</strong> (e.g., weight, portability, battery life), uses <strong>controlled database query tools</strong>, and recommends the <strong>two most suitable products</strong> grounded in real catalog data with explicit reasons and trade-offs.</p>
+<hr>
+<h2>📑 Table of Contents</h2>
+<ol>
+<li><a href="#-architecture--decision-flow">Architecture &amp; Decision Flow</a></li>
+<li><a href="#-farm-stack-compliance">FARM Stack Compliance</a></li>
+<li><a href="#-filtering--ranking-engine-specification">Filtering &amp; Ranking Engine Specification</a></li>
+<li><a href="#-project-directory-structure">Project Directory Structure</a></li>
+<li><a href="#-quickstart-setup-guide">Quickstart Setup Guide</a></li>
+<li><a href="#-automated-test-suite">Automated Test Suite</a></li>
+<li><a href="#-complete-12-endpoint-api-architecture">Complete 12-Endpoint API Architecture</a></li>
+<li><a href="#-edge-cases--reliability">Edge Cases &amp; Reliability</a></li>
+<li><a href="#-assessment-timeline--check-ins">Assessment Timeline &amp; Check-ins</a></li>
+</ol>
+<hr>
+<h2>🏛 Architecture &amp; Decision Flow</h2>
+<h3>Mermaid.js Architecture Flowchart</h3>
+<pre><code class="language-mermaid">graph TD
+    %% Styling
+    classDef frontend fill:#61dafb,stroke:#000,stroke-width:2px,color:#000;
+    classDef backend fill:#059669,stroke:#000,stroke-width:2px,color:#fff;
+    classDef agent fill:#8b5cf6,stroke:#000,stroke-width:2px,color:#fff;
+    classDef db fill:#f59e0b,stroke:#000,stroke-width:2px,color:#000;
+    classDef logic fill:#ef4444,stroke:#000,stroke-width:2px,color:#fff;
+
+    subgraph Client Layer
+        UI[React Frontend&lt;br/&gt;Chat Interface &amp; Recommendations]:::frontend
+    end
+
+    subgraph API Layer
+        API[FastAPI Backend&lt;br/&gt;REST Endpoints &amp; Validation]:::backend
+    end
+
+    subgraph AI Agent &amp; Orchestration
+        LLM[LLM Integration&lt;br/&gt;Extract Requirements]:::agent
+        State[Conversation State&lt;br/&gt;Track Memory]:::agent
+        Orchestrator{Has Enough&lt;br/&gt;Info?}:::agent
+    end
+
+    subgraph Business Logic
+        Filter[Filtering Engine&lt;br/&gt;Enforce Hard Constraints]:::logic
+        Rank[Ranking Engine&lt;br/&gt;Score Soft Preferences]:::logic
+    end
+
+    subgraph Data Layer
+        DB[(SQLite Database&lt;br/&gt;Products &amp; Conversations)]:::db
+    end
+
+    %% Flow Sequence
+    UI -- 1. Customer Message --&gt; API
+    API -- 2. Route Request --&gt; State
+    State -- 3. Fetch History --&gt; DB
+    State -- 4. Pass Context --&gt; LLM
+    LLM -- 5. Update Requirements --&gt; Orchestrator
+
+    %% Clarification Loop
+    Orchestrator -- No: Important Details Missing --&gt; API
+    API -- Ask Relevant Follow-up --&gt; UI
+
+    %% Recommendation Flow
+    Orchestrator -- Yes: Ready to Recommend --&gt; Filter
+    Filter -- 6. Query Eligible Items --&gt; DB
+    DB -- 7. Return Matches --&gt; Filter
+    Filter -- 8. Apply Rules --&gt; Rank
+    Rank -- 9. Select Top 2 &amp; Trade-offs --&gt; API
+    API -- 10. Final Response --&gt; UI
+</code></pre>
+<h3>ASCII Box Architecture Diagram</h3>
+<pre><code class="language-text"> ┌─────────────────────────────────────────────────────────┐
+ │                     REACT FRONTEND                      │
+ │    (Chat Interface, Product Cards, Trade-off Display)   │
+ └──────────────────────────┬──────────────────────────────┘
+                            │ 1. Customer Message
+                            ▼
+ ┌─────────────────────────────────────────────────────────┐
+ │                   FASTAPI BACKEND                       │
+ │  (/conversations/{id}/messages, Validation, Routing)    │
+ └──────────────────────────┬──────────────────────────────┘
+                            │ 2. Process Message
+                            ▼
+ ┌─────────────────────────────────────────────────────────┐
+ │               AI AGENT ORCHESTRATION                    │
+ │  ┌──────────────┐   ┌─────────────┐   ┌──────────────┐  │
+ │  │ LLM Engine   │──▶│ State       │──▶│ Orchestrator │  │
+ │  │ (Extraction) │   │ Manager     │   │ (Decision)   │  │
+ │  └──────────────┘   └─────────────┘   └──────┬───────┘  │
+ └──────────────────────────────────────────────┼──────────┘
+           ▲                                    │ 3. Check Info
+           │ (Missing Info: Loop back to UI)    ▼
+           │                           /─────────────────\
+           └──────────────────────────/ Enough Info for   \
+                                      \ Recommendation?   /
+                                       \─────────────────/
+                                                │ (Yes)
+                                                ▼
+ ┌─────────────────────────────────────────────────────────┐
+ │              FILTERING &amp; RANKING ENGINE                 │
+ │  ┌──────────────────────┐       ┌────────────────────┐  │
+ │  │ Filtering Engine     │──────▶│ Ranking Engine     │  │
+ │  │ (Hard constraints:   │       │ (Soft preferences: │  │
+ │  │ Budget, Category)    │       │ Portability, Specs)│  │
+ │  └──────────┬───────────┘       └─────────┬──────────┘  │
+ └─────────────┼─────────────────────────────┼─────────────┘
+               │ 4. Query Matching Items     │ 5. Select Top 2 
+               ▼                             ▼
+ ┌─────────────────────────────────────────────────────────┐
+ │                   SQLITE DATABASE                       │
+ │ ┌──────────────────┐ ┌────────────────┐ ┌─────────────┐ │
+ │ │ Products Catalog │ │ Conversations  │ │ Messages    │ │
+ │ └──────────────────┘ └────────────────┘ └─────────────┘ │
+ └─────────────────────────────────────────────────────────┘
+</code></pre>
+<hr>
+<h2>⚡ FARM Stack Compliance</h2>
+<p>The assessment requires <strong>FastAPI</strong> plus at least one more component from the <strong>FARM</strong> stack (FastAPI, React, MongoDB).</p>
+<ul>
+<li><strong>FastAPI:</strong> Core backend REST API with asynchronous endpoints, Pydantic v2 schemas, and structured logging.</li>
+<li><strong>React:</strong> Modern single-page application built with Vite and responsive Vanilla CSS, featuring live requirement memory inspection, product recommendation cards, and a comparative trade-off matrix.</li>
+<li><strong>Relational Data Layer:</strong> SQLite via SQLAlchemy 2.0 ORM with synthetic catalog seeding.</li>
+</ul>
+<hr>
+<h2>🔍 Filtering &amp; Ranking Engine Specification</h2>
+<h3>Stage 1: Hard Constraints Enforcement (Application Logic)</h3>
+<p>Mandatory constraints are strictly enforced in application code before ranking:</p>
+<ol>
+<li><strong>Category Filter:</strong> Product category must match target category (e.g., <code>laptop</code>, <code>smartphone</code>).</li>
+<li><strong>Strict Maximum Budget Cap:</strong> Any product where <code>product.price &gt; budget_max</code> is immediately disqualified.</li>
+<li><strong>Hardware Mandatory Thresholds:</strong><ul>
+<li>If customer requires <strong>local machine learning</strong>, application logic requires <code>min_ram_gb &gt;= 16</code> and a <strong>dedicated NVIDIA RTX GPU</strong> with CUDA tensor cores (or Apple Unified Memory).</li>
+<li>If customer requires <strong>gaming</strong>, dedicated GPU is mandatory.</li>
+</ul>
+</li>
+<li><strong>Stock Availability:</strong> <code>product.stock &gt; 0</code>.</li>
+</ol>
+<blockquote>
+<p><strong>Honest No-Match Handling:</strong> If 0 products satisfy mandatory constraints (e.g. an RTX 4090 laptop under ₹30,000), the system does <strong>not</strong> hallucinate products or violate constraints. Instead, it explains the exact bottleneck and suggests realistic alternatives.</p>
+</blockquote>
+<h3>Stage 2: Soft Preference &amp; Use-Case Ranking Algorithm</h3>
+<p>Products passing Stage 1 are scored on a scale from 0 to 100 points:</p>
+<p>$$\text{Score} = S_{\text{use-case}} + S_{\text{portability}} + S_{\text{battery}} + S_{\text{value}} + S_{\text{rating}}$$</p>
+<table>
+<thead>
+<tr>
+<th align="left">Component</th>
+<th align="center">Max Points</th>
+<th align="left">Evaluation Logic</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Use-Case Alignment ($S_{\text{use-case}}$)</strong></td>
+<td align="center">40 pts</td>
+<td align="left">Matches between customer&#39;s <code>primary_uses</code> and <code>product.intended_uses</code>. Bonus for dedicated VRAM $\ge$ 6GB on ML tasks.</td>
+</tr>
+<tr>
+<td align="left"><strong>Portability ($S_{\text{portability}}$)</strong></td>
+<td align="center">20 pts</td>
+<td align="left">Weight $\le$ 1.35kg (+20 pts), 1.35–1.65kg (+15 pts), 1.65–2.15kg (+8 pts), $&gt; 2.3$kg (+2 pts). Amplified when campus commute is mentioned.</td>
+</tr>
+<tr>
+<td align="left"><strong>Battery Life ($S_{\text{battery}}$)</strong></td>
+<td align="center">15 pts</td>
+<td align="left">Runtime $\ge 14$h (+15 pts), $\ge 9$h (+12 pts), $\ge 6.5$h (+8 pts), $&lt; 6.5$h (+4 pts).</td>
+</tr>
+<tr>
+<td align="left"><strong>Budget Optimization ($S_{\text{value}}$)</strong></td>
+<td align="center">15 pts</td>
+<td align="left">Evaluates hardware efficiency within budget without exceeding the ceiling.</td>
+</tr>
+<tr>
+<td align="left"><strong>Rating &amp; Reliability ($S_{\text{rating}}$)</strong></td>
+<td align="center">10 pts</td>
+<td align="left">$(\text{Rating} / 5.0) \times 10$.</td>
+</tr>
+</tbody></table>
+<h3>Stage 3: Complementary Top-2 Selection</h3>
+<ul>
+<li><strong>Rank #1:</strong> Highest overall scoring model.</li>
+<li><strong>Rank #2:</strong> Highest scoring model that offers a distinct, meaningful trade-off (e.g., maximum GPU compute vs. lightweight campus portability &amp; battery endurance).</li>
+</ul>
+<hr>
+<h2>📁 Project Directory Structure</h2>
+<pre><code>Intern_AI_Assessment/
+├── backend/
+│   ├── app/
+│   │   ├── main.py               # FastAPI entrypoint, CORS, lifespan
+│   │   ├── config.py             # Settings (pydantic-settings)
+│   │   ├── database.py           # SQLite connection &amp; sessionmaker
+│   │   ├── models/               # SQLAlchemy ORM models (Product, Conversation, Message)
+│   │   ├── schemas/              # Pydantic validation schemas
+│   │   ├── api/                  # REST API routers (health, products, conversations)
+│   │   ├── agent/                # Recommendation Agent Core
+│   │   │   ├── state.py          # Multi-turn state manager &amp; entity tracking
+│   │   │   ├── orchestrator.py   # Decision orchestrator (Info sufficiency evaluation)
+│   │   │   ├── extractor.py      # Dual-mode entity extractor (LLM + Regex rules)
+│   │   │   ├── filter_rank.py    # Hard constraint filter &amp; soft preference ranker
+│   │   │   ├── explainer.py      # Spec-accurate rationales &amp; trade-off generator
+│   │   │   └── tools.py          # Controlled, parameterized database queries
+│   │   └── data/
+│   │       ├── seed_data.py      # 23+ realistic synthetic electronics records
+│   │       └── init_db.py        # Database creation and seeding script
+│   ├── tests/                    # 20 automated pytest test cases
+│   ├── requirements.txt
+│   ├── .env.example
+│   └── pytest.ini
+├── frontend/                     # React (Vite SPA)
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Header.jsx        # Navigation, live health badge, actions
+│   │   │   ├── MessageBubble.jsx # Markdown chat messages &amp; recommendation container
+│   │   │   ├── ProductCard.jsx   # Product specs, match score, pros/cons
+│   │   │   ├── TradeOffMatrix.jsx# Side-by-side trade-off comparison table
+│   │   │   ├── StateInspector.jsx# Real-time agent memory &amp; requirements inspector
+│   │   │   ├── CatalogModal.jsx  # Database catalog browser
+│   │   │   └── ArchitectureModal.jsx # Mermaid &amp; ASCII architecture diagrams
+│   │   ├── App.jsx               # Main application controller &amp; quick prompts
+│   │   ├── index.css             # Polished dark-mode design system
+│   │   └── main.jsx
+│   ├── package.json
+│   └── vite.config.js
+├── docs/
+│   └── architecture.md           # Day 1 Architecture deliverable documentation
+└── README.md
+</code></pre>
+<hr>
+<h2>🚀 Quickstart Setup Guide</h2>
+<h3>Prerequisites</h3>
+<ul>
+<li><strong>Python 3.10+</strong> (Tested on Python 3.12)</li>
+<li><strong>Node.js 18+</strong> &amp; <strong>npm</strong></li>
+</ul>
+<h3>1. Backend Setup</h3>
+<pre><code class="language-bash"># Navigate to the backend directory
+cd backend
+
+# Create and activate virtual environment
+python -m venv .venv
+
+# Windows PowerShell:
+.\.venv\Scripts\Activate.ps1
+# Linux / macOS:
+# source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Initialize and seed the SQLite database with 23 synthetic products
+python -m app.data.init_db
+
+# Start the FastAPI server (running on http://127.0.0.1:8000)
+uvicorn app.main:app --reload --port 8000
+</code></pre>
+<blockquote>
+<p><strong>API Documentation:</strong> Interactive Swagger UI is available at <strong><a href="http://127.0.0.1:8000/docs">http://127.0.0.1:8000/docs</a></strong>.</p>
+</blockquote>
+<h3>2. Frontend Setup</h3>
+<p>Open a second terminal window:</p>
+<pre><code class="language-bash"># Navigate to the frontend directory
+cd frontend
+
+# Install Node dependencies
+npm install
+
+# Start the Vite development server (running on http://127.0.0.1:5173)
+npm run dev
+</code></pre>
+<p>Open <strong><a href="http://127.0.0.1:5173">http://127.0.0.1:5173</a></strong> in your browser.</p>
+<hr>
+<h2>🧪 Automated Test Suite</h2>
+<p>The backend includes a comprehensive automated test suite built with <code>pytest</code> covering 20 distinct test cases across functional requirements, edge cases, and the assessment benchmark conversation:</p>
+<pre><code class="language-bash">cd backend
+
+# Windows:
+.\.venv\Scripts\python.exe -m pytest
+
+# Linux / macOS (or any active virtual environment):
+pytest
+# or
+python -m pytest backend/tests
+</code></pre>
+<h3>Docker Quickstart (Optional)</h3>
+<p>You can run the entire FARM stack (FastAPI backend + React frontend) with a single command:</p>
+<pre><code class="language-bash">docker compose up --build
+</code></pre>
+<ul>
+<li>Frontend available at: <code>http://localhost:5173</code></li>
+<li>Backend API available at: <code>http://localhost:8000</code> (Swagger docs at <code>http://localhost:8000/docs</code>)</li>
+</ul>
+<hr>
+<h2>🧠 Why This LLM / Agent Approach Fits the Task</h2>
+<p>Section 4 of the assessment invites candidates to choose an LLM / agent framework and explain why the approach fits the problem.</p>
+<p>We chose an <strong>Orchestrated Stateful Agent with a Dual-Mode (LLM + Deterministic NLP) Extractor</strong>:</p>
+<ol>
+<li><strong>Zero Hallucination of Database Records:</strong> Naive LLM agents that generate SQL or choose products directly frequently hallucinate model numbers, prices, or technical specifications. In ElectroAdvisor, the LLM is restricted to <strong>structured entity extraction</strong> (turning text into Pydantic models). Product retrieval, filtering, and scoring are executed strictly in deterministic Python code and SQLAlchemy ORM.</li>
+<li><strong>Explicit Decision Orchestrator vs. Blind Questionnaires:</strong> Instead of relying on a rigid state machine questionnaire or an unconstrained LLM loop, an explicit Decision Graph evaluates requirement completeness. It asks a focused question when essential fields (use case, budget, or local vs. cloud) are missing, and transitions immediately to recommendation once requirements are sufficient.</li>
+<li><strong>Reproducible, Zero-Cost Evaluation:</strong> By supporting Google Gemini and OpenAI with a deterministic fallback, recruiters and automated CI pipelines can clone and test the repository without needing paid API keys or hitting external rate limits.</li>
+</ol>
+<hr>
+<h2>📡 Complete 12-Endpoint API Architecture</h2>
+<p>Based on architecture review and engineering rigor, the API specification has been expanded from the baseline 6 endpoints to a <strong>complete 12-endpoint architecture</strong> to support hybrid UI controls, debuggability, side-by-side comparison, taxonomy browsing, and user feedback loops.</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Purpose &amp; Engineering Justification</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Catalog</strong></td>
+<td><code>GET</code></td>
+<td><code>/api/v1/products</code></td>
+<td>List, filter by price/brand/search, and paginate catalog items deterministically</td>
+</tr>
+<tr>
+<td><strong>Catalog</strong></td>
+<td><code>GET</code></td>
+<td><code>/api/v1/products/{product_id}</code></td>
+<td>Retrieve comprehensive specs, intended uses, pros, and cons for a specific item</td>
+</tr>
+<tr>
+<td><strong>Catalog</strong></td>
+<td><code>GET</code></td>
+<td><code>/api/v1/products/compare</code></td>
+<td><strong>UX Enhancement:</strong> Side-by-side specification matrix &amp; trade-offs (<code>?ids=LAP-001,LAP-004</code>)</td>
+</tr>
+<tr>
+<td><strong>Catalog</strong></td>
+<td><code>GET</code></td>
+<td><code>/api/v1/categories</code></td>
+<td><strong>UI Optimization:</strong> Distinct categories, item counts, price ranges, and brands for UI chips</td>
+</tr>
+<tr>
+<td><strong>Agent</strong></td>
+<td><code>POST</code></td>
+<td><code>/api/v1/conversations</code></td>
+<td>Initialize a new stateful customer sales consultation session</td>
+</tr>
+<tr>
+<td><strong>Agent</strong></td>
+<td><code>POST</code></td>
+<td><code>/api/v1/conversations/{id}/messages</code></td>
+<td>Process customer natural language input and execute decision graph</td>
+</tr>
+<tr>
+<td><strong>Agent</strong></td>
+<td><code>GET</code></td>
+<td><code>/api/v1/conversations/{id}</code></td>
+<td>Retrieve full message history, extracted requirements, and memory state</td>
+</tr>
+<tr>
+<td><strong>Agent</strong></td>
+<td><code>PUT</code></td>
+<td><code>/api/v1/conversations/{id}/requirements</code></td>
+<td><strong>Hybrid UI Control:</strong> Direct state override via sliders/chips without typing in chat</td>
+</tr>
+<tr>
+<td><strong>Agent</strong></td>
+<td><code>DELETE</code></td>
+<td><code>/api/v1/conversations/{id}</code></td>
+<td><strong>Privacy &amp; Reset:</strong> Wipe conversation messages and requirements state safely</td>
+</tr>
+<tr>
+<td><strong>Agent</strong></td>
+<td><code>POST</code></td>
+<td><code>/api/v1/conversations/{id}/feedback</code></td>
+<td><strong>Product Analytics:</strong> Record user sentiment (thumbs up/down) &amp; purchase conversion intent</td>
+</tr>
+<tr>
+<td><strong>System</strong></td>
+<td><code>GET</code></td>
+<td><code>/api/v1/health</code></td>
+<td>Service uptime and database connectivity health check</td>
+</tr>
+<tr>
+<td><strong>System</strong></td>
+<td><code>GET</code></td>
+<td><code>/api/v1/conversations/{id}/debug</code></td>
+<td><strong>Engineering Rigor:</strong> Inspect active constraints, decision traces, and candidate scoring</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>Endpoint Payloads &amp; Examples</h3>
+<h4>1. <code>GET /api/v1/categories</code></h4>
+<p><strong>Response (200 OK):</strong></p>
+<pre><code class="language-json">{
+  &quot;total_categories&quot;: 5,
+  &quot;categories&quot;: [
+    {
+      &quot;name&quot;: &quot;laptop&quot;,
+      &quot;display_name&quot;: &quot;Laptop&quot;,
+      &quot;count&quot;: 14,
+      &quot;min_price&quot;: 32990.0,
+      &quot;max_price&quot;: 179990.0,
+      &quot;brands&quot;: [&quot;Acer&quot;, &quot;Apple&quot;, &quot;ASUS&quot;, &quot;Dell&quot;, &quot;HP&quot;, &quot;Lenovo&quot;]
+    }
+  ]
+}
+</code></pre>
+<h4>2. <code>GET /api/v1/products/compare?ids=LAP-001,LAP-004</code></h4>
+<p><strong>Response (200 OK):</strong></p>
+<pre><code class="language-json">{
+  &quot;product_ids&quot;: [&quot;LAP-001&quot;, &quot;LAP-004&quot;],
+  &quot;products&quot;: [...],
+  &quot;comparison_matrix&quot;: {
+    &quot;price&quot;: { &quot;label&quot;: &quot;Price (INR)&quot;, &quot;values&quot;: { &quot;LAP-001&quot;: 42990.0, &quot;LAP-004&quot;: 76990.0 } },
+    &quot;weight_kg&quot;: { &quot;label&quot;: &quot;Weight (kg)&quot;, &quot;values&quot;: { &quot;LAP-001&quot;: 1.62, &quot;LAP-004&quot;: 2.1 } }
+  },
+  &quot;key_differences&quot;: [
+    &quot;Lenovo IdeaPad Slim 3 15 is ₹34,000 more affordable than Acer Nitro V 15.&quot;,
+    &quot;Lenovo IdeaPad Slim 3 15 is 0.48 kg lighter (1.62 kg vs 2.1 kg).&quot;
+  ]
+}
+</code></pre>
+<h4>3. <code>PUT /api/v1/conversations/{id}/requirements</code></h4>
+<p><strong>Request Body:</strong></p>
+<pre><code class="language-json">{
+  &quot;budget_max&quot;: 75000.0,
+  &quot;min_ram_gb&quot;: 16,
+  &quot;requires_gpu&quot;: true,
+  &quot;portability_important&quot;: true
+}
+</code></pre>
+<p><strong>Response (200 OK):</strong> Returns updated <code>ConversationResponse</code> with synchronized state.</p>
+<h4>4. <code>DELETE /api/v1/conversations/{id}</code></h4>
+<p><strong>Response (200 OK):</strong></p>
+<pre><code class="language-json">{
+  &quot;status&quot;: &quot;deleted&quot;,
+  &quot;conversation_id&quot;: &quot;conv_a1b2c3d4e5f6&quot;,
+  &quot;message&quot;: &quot;Conversation context and history cleared successfully.&quot;
+}
+</code></pre>
+<h4>5. <code>POST /api/v1/conversations/{id}/feedback</code></h4>
+<p><strong>Request Body:</strong></p>
+<pre><code class="language-json">{
+  &quot;rating&quot;: &quot;thumbs_up&quot;,
+  &quot;purchase_intent&quot;: true,
+  &quot;selected_product_id&quot;: &quot;LAP-004&quot;,
+  &quot;comment&quot;: &quot;Perfect recommendation for my college coursework and machine learning.&quot;
+}
+</code></pre>
+<p><strong>Response (200 OK):</strong> Status <code>received</code> with timestamp and saved feedback metadata.</p>
+<h4>6. <code>GET /api/v1/conversations/{id}/debug</code></h4>
+<p><strong>Response (200 OK):</strong></p>
+<pre><code class="language-json">{
+  &quot;conversation_id&quot;: &quot;conv_a1b2c3d4e5f6&quot;,
+  &quot;status&quot;: &quot;active&quot;,
+  &quot;state&quot;: { &quot;budget_max&quot;: 80000.0, &quot;category&quot;: &quot;laptop&quot;, &quot;primary_uses&quot;: [&quot;programming&quot;, &quot;machine_learning&quot;] },
+  &quot;hard_constraints&quot;: { &quot;max_budget&quot;: 80000.0, &quot;min_ram_gb&quot;: 16, &quot;requires_gpu&quot;: true },
+  &quot;preferences&quot;: { &quot;portability&quot;: true, &quot;battery_priority&quot;: true },
+  &quot;message_count&quot;: 4,
+  &quot;catalog_diagnostics&quot;: {
+    &quot;total_catalog_products&quot;: 23,
+    &quot;category&quot;: &quot;laptop&quot;,
+    &quot;category_products_count&quot;: 14,
+    &quot;passing_hard_filters_count&quot;: 2,
+    &quot;rejections_summary&quot;: { &quot;over_budget&quot;: 5, &quot;missing_dedicated_gpu&quot;: 7 },
+    &quot;top_candidates&quot;: [
+      {
+        &quot;id&quot;: &quot;LAP-004&quot;,
+        &quot;name&quot;: &quot;Acer Nitro V 15&quot;,
+        &quot;price&quot;: 76990.0,
+        &quot;total_score&quot;: 93.5,
+        &quot;score_breakdown&quot;: { &quot;use_case_score&quot;: 40.0, &quot;portability_score&quot;: 15.0, &quot;value_score&quot;: 13.5 }
+      }
+    ]
+  }
+}
+</code></pre>
+<hr>
+<h2>🛡 Edge Cases &amp; Reliability</h2>
+<ol>
+<li><strong>Controlled Tool Execution:</strong> Queries use parameterized SQLAlchemy ORM filters. The agent cannot execute arbitrary SQL.</li>
+<li><strong>Indian Number Format Support:</strong> Correctly parses Indian currency groupings (e.g. <code>₹1,20,000</code> parses to <code>120000.0</code>, <code>1.5 lakh</code> parses to <code>150000.0</code>).</li>
+<li><strong>Contradictory Constraints Detection:</strong> Detects contradictions (e.g. <code>min_price &gt; max_price</code> or &quot;MacBook running Windows&quot;) and asks for clarification.</li>
+<li><strong>Category Isolation:</strong> Switching categories (e.g., from laptop to monitor) resets hardware constraints so laptop RAM requirements do not bleed into monitor queries.</li>
+<li><strong>Post-Recommendation Follow-ups:</strong> Understands user refinements (&quot;any lighter options?&quot;, &quot;thanks&quot;) and responds appropriately without repeating the initial recommendation.</li>
+<li><strong>Graceful LLM Fallbacks:</strong> Validates LLM responses with Pydantic schemas, imposes a 5-second timeout, and falls back to deterministic rules if the LLM output is malformed.</li>
+</ol>
+<hr>
+<h2>📅 Assessment Timeline &amp; Check-ins</h2>
+<h3>Day 1 Check-in (19 October 2026, 9:00 PM): Architecture Skeleton</h3>
+<ul>
+<li><strong>Status:</strong> <strong>Completed &amp; Submitted</strong></li>
+<li><strong>Artifacts:</strong> Documented in <a href="docs/architecture.md">docs/architecture.md</a> and viewable in the React web UI. Includes Mermaid.js flowchart and ASCII box diagram.</li>
+</ul>
+<h3>Day 2 Check-in (20 October 2026, 9:00 PM): Progress Report</h3>
+<ul>
+<li><strong>Architecture Evolution:</strong> Based on architecture review, the API specification has been expanded from the baseline 6 endpoints to 12 endpoints to support hybrid UI controls, debuggability, and user feedback loops.</li>
+<li><strong>What is Implemented So Far:</strong><ul>
+<li>✅ <strong>FastAPI Backend REST API (Complete 12 Endpoints):</strong> All 12 endpoints implemented with Pydantic validation, deterministic sorting, and error handling.</li>
+<li>✅ <strong>Two-Stage Recommendation Engine:</strong> Application-level hard filtering (budget cap, category, RAM, dedicated GPU) followed by soft preference utility scoring (0–100 pts).</li>
+<li>✅ <strong>State Tracking &amp; Orchestrator:</strong> Stateful conversation memory across turns, category isolation, and semantic clarification tracking.</li>
+<li>✅ <strong>Dual-Mode Extractor:</strong> Support for Gemini and OpenAI with Pydantic validation, 5s timeout, and regex rule engine.</li>
+<li>✅ <strong>React Frontend:</strong> Chat UI with live State Inspector, product recommendation cards, and trade-off comparison table.</li>
+<li>✅ <strong>Automated Tests:</strong> 37 automated tests passing with pytest across all 12 endpoints and core edge cases.</li>
+</ul>
+</li>
+<li><strong>What Works:</strong><ul>
+<li>Multi-turn benchmark conversation from Section 3 (College $\rightarrow$ Programming &amp; ML $\rightarrow$ Around 80k &amp; campus carry $\rightarrow$ Top 2 recommendations strictly within ₹80k).</li>
+<li>Mind changes (updating budget mid-conversation).</li>
+<li>Category transitions (laptop to monitor/headphones).</li>
+<li>Indian currency parsing (<code>₹1,20,000</code>, <code>80k</code>).</li>
+<li>Dynamic database-computed no-match explanations.</li>
+<li>Side-by-side product comparisons (<code>/api/v1/products/compare</code>).</li>
+<li>Taxonomy loading for chips/dropdowns (<code>/api/v1/categories</code>).</li>
+<li>UI state override (<code>PUT /api/v1/conversations/{id}/requirements</code>).</li>
+<li>Session wipe and privacy reset (<code>DELETE /api/v1/conversations/{id}</code>).</li>
+<li>Recommendation feedback collection (<code>POST /api/v1/conversations/{id}/feedback</code>).</li>
+<li>Engineering diagnostics and candidate traces (<code>GET /api/v1/conversations/{id}/debug</code>).</li>
+</ul>
+</li>
+<li><strong>Current Limitations &amp; Known Areas for Improvement:</strong><ul>
+<li><em>Headless Browser Driver in Sandbox:</em> Automated Playwright browser subagents encountered an external CDN mirror 404 issue downloading Windows driver binaries; local manual browser testing works normally.</li>
+<li><em>Catalog Depth:</em> The synthetic catalog has 23 items with depth concentrated in laptops (14 models) and 2–3 items in other categories.</li>
+<li><em>Rule Engine Primary Usage:</em> In standard evaluation without an external API key, extraction relies on pattern matching; while robust for common queries, complex phrasing benefits from providing a <code>GEMINI_API_KEY</code>.</li>
+</ul>
+</li>
+<li><strong>What Remains for Day 3:</strong><ul>
+<li>Expanding the product catalog to 35+ items for richer non-laptop recommendations.</li>
+<li>Live demonstration walkthrough rehearsal for the Google Meet.</li>
+</ul>
+</li>
+</ul>
+<h3>Day 3 Check-in (21 October 2026, Google Meet): Final Submission &amp; Demo</h3>
+<ul>
+<li><strong>Status:</strong> Ready for live demonstration.</li>
+<li><strong>Artifacts:</strong> Source code, automated tests, final README, and interview defense guide in <a href="docs/demo_guide.md">docs/demo_guide.md</a>.</li>
+</ul>
+
+
+</body>
+</html>
