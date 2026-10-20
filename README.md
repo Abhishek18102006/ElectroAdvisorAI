@@ -311,6 +311,35 @@ cd backend
 
 ## 📅 Assessment Timeline & Check-ins
 
-- **Day 1 (Architecture Skeleton):** Completed and documented in [docs/architecture.md](docs/architecture.md) featuring Mermaid.js and ASCII box flowcharts.
-- **Day 2 (Progress README):** Completed. Fully functional backend API, SQLite seed catalog, test suite (20/20 passing), and React frontend with live state inspection.
-- **Day 3 (Final Submission & Demo):** Source code, automated tests, and interactive UI ready for live Google Meet demonstration.
+### Day 1 Check-in (19 October 2026, 9:00 PM): Architecture Skeleton
+- **Status:** **Completed & Submitted**
+- **Artifacts:** Documented in [docs/architecture.md](docs/architecture.md) and viewable in the React web UI via the "Architecture" modal button. Includes the Mermaid.js component flowchart, ASCII architecture box diagram, and module breakdown.
+
+### Day 2 Check-in (20 October 2026, 9:00 PM): Progress Report
+- **What is Implemented So Far:**
+  - ✅ **FastAPI Backend REST API:** Fully functional endpoints for health checking, product listing with pagination and filters, product details, conversation creation, stateful multi-turn messaging, and state reset.
+  - ✅ **Two-Stage Recommendation Engine:** Strict application-level hard constraints filtering (maximum budget cap, category, minimum RAM, required GPU) followed by soft preference ranking (0–100 scoring based on use-case fit, campus portability, battery endurance, budget value, customer rating).
+  - ✅ **AI Agent State Machine:** Stateful memory tracking across turns, mind-change detection, and dynamic decision orchestrator that identifies missing information and avoids redundant questions once requirements are established.
+  - ✅ **Dual-Mode Requirement Extraction:** Supports Google Gemini or OpenAI LLM structured JSON output, with a deterministic regex/rule-based NLP parser fallback for 100% offline evaluation.
+  - ✅ **Controlled Database Tools:** Parameterized SQLAlchemy ORM queries preventing arbitrary SQL injection.
+  - ✅ **React Single-Page Application:** Built with Vite and modern CSS, featuring live requirement memory inspection, spec-accurate product recommendation cards, and side-by-side trade-off matrices.
+  - ✅ **Automated Test Suite:** 20/20 test cases passing with pytest (100% pass rate in 0.74s) covering unit, integration, edge cases, and the benchmark conversation flow.
+- **What Works:**
+  - Complete 3-turn assessment scenario from Section 3 running seamlessly both via automated tests and live HTTP API.
+  - Hard constraint enforcement guaranteeing zero products above budget.
+  - Dynamic follow-ups (asks for use case and budget when missing; does not ask once known).
+  - Transparent trade-off comparisons across compute, weight, battery, and price.
+  - Honest no-match handling when constraints cannot be satisfied.
+- **Current Limitations / Blockers:**
+  - *Headless Playwright Driver CDN:* Automated browser subagents encountered an external CDN mirror issue downloading the Playwright Windows driver (`playwright-1.57.0-win32_x64.zip` returning 404). The web application itself runs smoothly and is directly testable via any local browser at `http://127.0.0.1:5173`.
+  - *Synthetic Catalog Size:* The catalog currently contains 23 representative synthetic products across 5 categories. Expanding the catalog to 50+ items would provide even deeper variety for niche filters.
+- **What Remains for Day 3 (Final Polish & Google Meet):**
+  - Live demonstration walkthrough and presentation prep for the Google Meet.
+  - Containerization (`Dockerfile` and `docker-compose.yml`) for one-click reviewer evaluation.
+  - Preparing responses for live code modification and debugging during the interview.
+- **How to Run Current Version:**
+  - Follow the [Quickstart Setup Guide](#-quickstart-setup-guide) above (Backend on port 8000, Frontend on port 5173, Pytest with `pytest`).
+
+### Day 3 Check-in (21 October 2026, Google Meet): Final Submission & Demo
+- **Status:** **Ready for Live Demonstration & Defense**
+- **Artifacts:** Source code repository, passing test suite, final README, SQLite database and seed scripts, and demo walk-through guide in [docs/demo_guide.md](docs/demo_guide.md).
