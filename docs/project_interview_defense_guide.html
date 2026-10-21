@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ElectroAdvisor AI - Complete Project Explanation & Interview Defense Guide</title>
+<style>
+  @page {
+    size: A4;
+    margin: 12mm 13mm 12mm 13mm;
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 8pt;
+      color: #64748b;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #0f172a;
+    background: #ffffff;
+    line-height: 1.45;
+    font-size: 8.8pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  .header {
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .header-left h1 {
+    font-size: 18pt;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.4px;
+  }
+
+  .header-left .subtitle {
+    font-size: 10pt;
+    color: #475569;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .header-right {
+    text-align: right;
+    font-size: 8pt;
+    color: #64748b;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    font-size: 7pt;
+    font-weight: 700;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-success { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+  .badge-info { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
+  .badge-dark { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+  .badge-purple { background: #f3e8ff; color: #6b21a8; border: 1px solid #d8b4fe; }
+
+  h2 {
+    font-size: 11.5pt;
+    font-weight: 700;
+    color: #0f172a;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 4px;
+    margin-top: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    page-break-after: avoid;
+  }
+
+  h3 {
+    font-size: 9.8pt;
+    font-weight: 700;
+    color: #1e293b;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    page-break-after: avoid;
+  }
+
+  p {
+    margin: 0 0 6px 0;
+  }
+
+  .callout {
+    background: #f8fafc;
+    border-left: 4px solid #3b82f6;
+    padding: 8px 12px;
+    border-radius: 0 6px 6px 0;
+    margin: 8px 0;
+    font-size: 8.8pt;
+  }
+
+  .callout-success {
+    border-left-color: #10b981;
+    background: #f0fdf4;
+  }
+
+  .callout-warning {
+    border-left-color: #f59e0b;
+    background: #fffbeb;
+  }
+
+  .callout-purple {
+    border-left-color: #8b5cf6;
+    background: #faf5ff;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 8.2pt;
+    page-break-inside: avoid;
+  }
+
+  th, td {
+    padding: 5px 8px;
+    text-align: left;
+    border: 1px solid #cbd5e1;
+  }
+
+  th {
+    background-color: #f1f5f9;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 8pt;
+    background: #f1f5f9;
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: #0f172a;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 8px 0;
+  }
+
+  .card {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 8px 10px;
+    background: #ffffff;
+  }
+
+  .card-title {
+    font-weight: 700;
+    font-size: 9pt;
+    color: #0f172a;
+    margin-bottom: 4px;
+  }
+
+  ul, ol {
+    margin: 0 0 8px 0;
+    padding-left: 18px;
+  }
+
+  li {
+    margin-bottom: 3px;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  .qa-block {
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    page-break-inside: avoid;
+  }
+
+  .qa-q {
+    font-weight: 700;
+    color: #1e3a8a;
+    margin-bottom: 3px;
+  }
+
+  .qa-a {
+    color: #334155;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <h1>ElectroAdvisor AI</h1>
+    <div class="subtitle">Complete Technical Architecture & HR / Interview Defense Guide</div>
+  </div>
+  <div class="header-right">
+    <div><strong>Candidate:</strong> Abhishek</div>
+    <div><strong>Date:</strong> 21 October 2026</div>
+    <div style="margin-top: 4px;">
+      <span class="badge badge-success">40 / 40 Tests Passing</span>
+      <span class="badge badge-info">FARM Stack</span>
+      <span class="badge badge-purple">Playwright Verified</span>
+    </div>
+  </div>
+</div>
+
+<!-- Section 1 -->
+<h2>🎯 1. Executive Summary & 30-Second Elevator Pitch</h2>
+<div class="callout callout-purple">
+  <strong>The 30-Second Interview Pitch:</strong><br/>
+  "I built <strong>ElectroAdvisor</strong>, an intelligent conversational sales assistant for electronics. When customers shop for tech, they know their practical goals—like <em>'I need a laptop for college machine learning experiments and campus commute on an ₹80,000 budget'</em>—but rarely know the specific hardware specifications they need. Generic LLMs often hallucinate prices or fake specs, while ecommerce filters are dumb and rigid. ElectroAdvisor bridges this gap by combining an asynchronous <strong>FastAPI</strong> backend and <strong>React</strong> frontend with a stateful recommendation agent. It translates natural language goals into strict hardware rules, enforces hard budget caps in deterministic Python code so it never overspends, and recommends the <strong>top 2 products</strong> with explicit trade-off comparisons grounded in a real 50-item database."
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title">❌ Why Naive LLMs & Chatbots Fail</div>
+    <ul>
+      <li><strong>Hallucinations:</strong> LLMs invent fake model names, discontinued laptops, or fictitious prices.</li>
+      <li><strong>Budget Violations:</strong> Prompts like "around 80k" frequently output ₹95k or ₹1.2L items.</li>
+      <li><strong>Excessive Interrogation:</strong> Chatbots ask 15–20 robotic survey questions in a row.</li>
+      <li><strong>API Fragility:</strong> Vulnerable to network stalls, rate limits, and quota tireout.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">✅ How ElectroAdvisor Solves This</div>
+    <ul>
+      <li><strong>Strict Separation:</strong> LLM only extracts structured entities; deterministic code filters & scores.</li>
+      <li><strong>Deterministic Budget Caps:</strong> Hard constraint eliminates over-budget items before scoring.</li>
+      <li><strong>Decision Graph:</strong> Evaluates information sufficiency; stops questioning once essentials are known.</li>
+      <li><strong>Dual-Mode Failover:</strong> 5.0s timeout with instant fallback to regex rules in &lt;5ms.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Section 2 -->
+<h2>🏛 2. High-Level Architecture & Technical Stack</h2>
+<p>ElectroAdvisor complies with the <strong>FARM Stack</strong> (FastAPI, React, SQLite/SQLAlchemy) with clean layer separation:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 20%;">Architecture Layer</th>
+      <th style="width: 25%;">Technologies</th>
+      <th>Responsibilities & Technical Justification</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Client Layer</strong></td>
+      <td>React 18, Vite, Lucide Icons, Custom CSS Tokens</td>
+      <td>Chat bubble stream, live State Inspector drawer, dynamic product cards, side-by-side trade-off matrix, catalog and architecture modals.</td>
+    </tr>
+    <tr>
+      <td><strong>API Layer</strong></td>
+      <td>FastAPI, Pydantic v2, Uvicorn, ASGI Async</td>
+      <td>12 REST endpoints covering catalog pagination, detail lookups, multi-product comparison, category taxonomies, state override, session reset, feedback, and diagnostics.</td>
+    </tr>
+    <tr>
+      <td><strong>AI Agent Core</strong></td>
+      <td>State Manager, Decision Graph, Dual Extractor</td>
+      <td>Stateful multi-turn memory tracking, hard constraint vs. soft preference separation, mind-change detection, category isolation, and focused follow-up generation.</td>
+    </tr>
+    <tr>
+      <td><strong>Recommendation Engine</strong></td>
+      <td>Two-Stage Filter & Rank, Explainer</td>
+      <td>Stage 1 hard constraint filtering (budget, RAM, dedicated GPU) $\rightarrow$ Stage 2 multi-factor utility scoring (0–100 pts) $\rightarrow$ Top 2 diversity selection $\rightarrow$ Spec-accurate trade-offs.</td>
+    </tr>
+    <tr>
+      <td><strong>Data Layer</strong></td>
+      <td>SQLite, SQLAlchemy ORM, Pydantic Schemas</td>
+      <td>Relational persistence for 50 generalised records across laptops, smartphones, tablets, monitors, and headphones. Parameterized queries prevent SQL injection.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Section 3 -->
+<h2>🔄 3. The 5-Step Runtime Request Flow</h2>
+<p>When a user sends a message (e.g., <em>"Around ₹80,000. Mostly local experiments, and I carry it around campus."</em>), the system processes it in five distinct steps:</p>
+
+<ol>
+  <li><strong>Step 1: NLP Entity Extraction (<code>extractor.py</code>)</strong> — Translates unstructured customer text into a structured Pydantic schema (<code>budget_max: 80000.0</code>, <code>primary_uses: ["machine_learning"]</code>, <code>local_ml: True</code>, <code>portability: True</code>). Uses Gemini 1.5 Flash or OpenAI with a strict <strong>5.0s timeout</strong>, falling back to a deterministic regex engine.</li>
+  <li><strong>Step 2: State Tracking & Mind-Change Reconciliation (<code>state.py</code>)</strong> — The <code>StateManager</code> merges the new entities into persistent conversation memory. If the customer updates a previously stated requirement (e.g., lowering budget from 80k to 60k), it overwrites the field while preserving earlier context.</li>
+  <li><strong>Step 3: Decision Graph Orchestration (<code>orchestrator.py</code>)</strong> — Evaluates information completeness. If essential fields are missing (e.g., use case or budget), it halts and asks <strong>one focused follow-up question</strong>. If requirements are sufficient, it immediately transitions to recommendation.</li>
+  <li><strong>Step 4: Two-Stage Filtering & Ranking (<code>filter_rank.py</code>)</strong>:
+    <ul>
+      <li><em>Stage 1 (Hard Constraint Filter):</em> Automatically disqualifies products where <code>price &gt; budget_max</code> or where local ML is requested but dedicated GPU is missing.</li>
+      <li><em>Stage 2 (Soft Preference Ranking):</em> Computes a 0–100 utility score: Use-Case Fit (40 pts) + Portability (20 pts) + Battery (15 pts) + Customer Rating (15 pts) + Value (10 pts). Selects the Top 2 complementary models.</li>
+    </ul>
+  </li>
+  <li><strong>Step 5: Rationale & Trade-Off Generation (<code>explainer.py</code>)</strong> — Formats spec-accurate explanations directly from database fields (zero hallucinations) and generates a structured side-by-side trade-off matrix across Graphics, Portability, Battery, and Price.</li>
+</ol>
+
+<div class="page-break"></div>
+
+<!-- Section 4 -->
+<h2>📂 4. Codebase Deep Dive: What Every File Does</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 25%;">File Path</th>
+      <th style="width: 20%;">Core Component</th>
+      <th>Plain-English Role & Implementation Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>backend/app/agent/extractor.py</code></td>
+      <td>Dual-Mode Extractor</td>
+      <td>Extracts structured requirements from natural conversation. Supports Google Gemini and OpenAI with strict 5.0s timeout. Includes regex rule engine for Indian numbering (<code>₹1,20,000</code>, <code>80k</code>, <code>1.5 lakh</code>).</td>
+    </tr>
+    <tr>
+      <td><code>backend/app/agent/state.py</code></td>
+      <td>State Manager</td>
+      <td>Maintains multi-turn conversational memory. Merges incremental updates, updates state when user changes budget mid-chat, and resets hardware constraints when switching product categories.</td>
+    </tr>
+    <tr>
+      <td><code>backend/app/agent/orchestrator.py</code></td>
+      <td>Decision Orchestrator</td>
+      <td>Evaluates requirement completeness. Prevents 20-question survey loops: asks targeted follow-ups only when category, use case, or budget are unknown, then triggers recommendation immediately.</td>
+    </tr>
+    <tr>
+      <td><code>backend/app/agent/filter_rank.py</code></td>
+      <td>Filter & Ranking Engine</td>
+      <td>Stage 1 hard filtering (budget cap, minimum RAM, dedicated GPU) followed by Stage 2 soft preference utility scoring (0–100 points) and Top 2 diversity selection.</td>
+    </tr>
+    <tr>
+      <td><code>backend/app/agent/explainer.py</code></td>
+      <td>Grounded Explainer</td>
+      <td>Produces grounded explanations citing real specs and builds trade-off matrices. Generates dynamic no-match explanations citing real catalog prices when constraints cannot be met.</td>
+    </tr>
+    <tr>
+      <td><code>backend/app/agent/tools.py</code></td>
+      <td>Database Tools</td>
+      <td>Parameterized SQLAlchemy queries for category, price range, and specification queries. Prevents arbitrary SQL execution and injection attacks.</td>
+    </tr>
+    <tr>
+      <td><code>backend/app/data/seed_data.py</code></td>
+      <td>Product Catalog</td>
+      <td>50 generalised records across 5 categories (20 laptops, 8 smartphones, 8 tablets, 7 monitors, 7 headphones) with realistic specs, pros, cons, and Unsplash images.</td>
+    </tr>
+    <tr>
+      <td><code>backend/app/config.py</code></td>
+      <td>Settings & Config</td>
+      <td>Centralized Pydantic configuration loading environment variables, CORS settings, and <code>LLM_TIMEOUT_SECONDS=5.0</code>.</td>
+    </tr>
+    <tr>
+      <td><code>frontend/src/App.jsx</code></td>
+      <td>Frontend Controller</td>
+      <td>Manages message state, API integration, quick prompts, and layout coordination between chat and inspector.</td>
+    </tr>
+    <tr>
+      <td><code>frontend/src/components/StateInspector.jsx</code></td>
+      <td>Live Memory Inspector</td>
+      <td>Live drawer showing the active requirements extracted by the agent (category, budget ceiling, required RAM, detected constraints, and current intent).</td>
+    </tr>
+    <tr>
+      <td><code>frontend/src/components/ProductCard.jsx</code></td>
+      <td>Product Cards</td>
+      <td>Renders recommendation cards with suitability match score bar, formatted Indian Rupee prices, pros, cons, and key advantages.</td>
+    </tr>
+    <tr>
+      <td><code>frontend/src/components/TradeOffMatrix.jsx</code></td>
+      <td>Trade-Off Matrix</td>
+      <td>Side-by-side comparison table highlighting trade-offs between Top 1 and Top 2 recommendations across Compute, Portability, Battery, and Price.</td>
+    </tr>
+    <tr>
+      <td><code>frontend/verify_playwright.cjs</code></td>
+      <td>E2E Browser Test</td>
+      <td>Automated Playwright verification script testing headless Chromium launch, sandbox network egress, and local asset rendering (<code>npm run test:e2e</code>).</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Section 5 -->
+<h2>🛡️ 5. Key Edge Cases & Reliability Hardening</h2>
+
+<div class="callout callout-success">
+  <strong>Highlights to Mention in Your Interview:</strong>
+  <ul>
+    <li><strong>50 Generalised Records:</strong> Expanded catalog from 23 to 50 realistic records across 5 categories, verified by automated tests.</li>
+    <li><strong>Strict LLM Timeout Safety:</strong> Added configurable <code>LLM_TIMEOUT_SECONDS=5.0</code>. Rather than worrying about API key rotation or exhaustion heuristics, the agent cancels stalled LLM calls after 5s and falls back cleanly to deterministic rules.</li>
+    <li><strong>Playwright Headless Browser Fix:</strong> Diagnosed CDN mirror 404s, installed official Playwright driver binaries (<code>npx playwright install chromium</code>), and verified sandbox network egress and browser compatibility via <code>npm run test:e2e</code>.</li>
+    <li><strong>Indian Currency Parsing:</strong> Handles <code>₹1,20,000</code>, <code>1,20,000 INR</code>, <code>80k</code>, and <code>1.5 lakh</code> without regex crashes.</li>
+    <li><strong>Mind Changes:</strong> Customer can reduce their budget mid-chat (e.g. ₹80k $\rightarrow$ ₹60k); state updates immediately and computes dynamic alternatives.</li>
+    <li><strong>Category Isolation:</strong> Switching from laptop to monitor clears RAM and GPU hard constraints so monitor recommendations aren't blocked.</li>
+    <li><strong>Honest No-Match Fallback:</strong> If a customer requests impossible constraints (e.g. RTX 4090 under 30k), it outputs an honest database-computed explanation with real alternatives instead of hallucinating.</li>
+  </ul>
+</div>
+
+<div class="page-break"></div>
+
+<!-- Section 6 & 7 -->
+<h2>⚠️ 6. Current Limitations & 🚀 7. Future Production Roadmap</h2>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title">⚠️ Current Limitations (Self-Awareness)</div>
+    <ul>
+      <li><strong>In-Memory / SQLite State:</strong> State stored in local SQLite / memory. Not yet horizontally scalable across multiple servers.</li>
+      <li><strong>Static Synthetic Catalog:</strong> 50 representative items; not yet integrated with live e-commerce APIs (Amazon/Flipkart).</li>
+      <li><strong>Rule-Based Boundaries:</strong> Offline regex mode handles common queries but lacks deep linguistic nuance for convoluted idioms.</li>
+      <li><strong>Text-Only Modality:</strong> Lacks voice input or spec-sheet image upload.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">🚀 Future Roadmap (Production Vision)</div>
+    <ul>
+      <li><strong>Distributed Persistence:</strong> Migrate from SQLite to <strong>PostgreSQL</strong>, and use <strong>Redis</strong> for sub-millisecond conversation state caching.</li>
+      <li><strong>Hybrid RAG & Vector Search:</strong> Embed customer reviews and technical manuals using Vertex AI embeddings + pgvector for semantic retrieval.</li>
+      <li><strong>Live Inventory Webhooks:</strong> Stream real-time pricing, flash discounts, and stock levels from ecommerce platforms.</li>
+      <li><strong>Multimodal & Voice:</strong> Add Whisper STT / ElevenLabs TTS for in-store physical kiosk tablets, and image recognition for syllabus spec sheets.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Section 8 -->
+<h2>🎯 8. HR & Technical Interview Q&A Cheatsheet</h2>
+
+<div class="qa-block">
+  <div class="qa-q">Q1: "Why did you use FastAPI instead of Flask or Django?"</div>
+  <div class="qa-a"><strong>Answer:</strong> "FastAPI is natively asynchronous (ASGI), which is critical for AI agents making non-blocking calls to external LLMs and databases. It also provides automatic Pydantic request/response validation and auto-generates interactive Swagger API documentation at <code>/docs</code>, saving significant engineering overhead."</div>
+</div>
+
+<div class="qa-block">
+  <div class="qa-q">Q2: "Why didn't you let the LLM generate SQL queries directly?"</div>
+  <div class="qa-a"><strong>Answer:</strong> "Allowing an LLM to generate raw SQL poses severe security risks like SQL injection, and reliability risks like hallucinated tables or malformed syntax. In ElectroAdvisor, tool execution is strictly controlled through parameterized SQLAlchemy ORM queries in <code>app/agent/tools.py</code>. The LLM only extracts structured parameters, which are validated before querying."</div>
+</div>
+
+<div class="qa-block">
+  <div class="qa-q">Q3: "How do you guarantee the AI never recommends products above the customer's budget?"</div>
+  <div class="qa-a"><strong>Answer:</strong> "We use a two-stage recommendation pipeline. Maximum budget is enforced as a <strong>hard constraint</strong> in Stage 1. Any product where <code>price &gt; budget_max</code> is strictly disqualified in Python code before scoring even begins. An over-budget product can never reach the soft ranking stage regardless of its features."</div>
+</div>
+
+<div class="qa-block">
+  <div class="qa-q">Q4: "What happens if the Gemini or OpenAI API times out or fails?"</div>
+  <div class="qa-a"><strong>Answer:</strong> "As emphasized during our architecture review, we prioritize strict timeout guarantees over API key tireout heuristics. We enforce an async timeout of <code>LLM_TIMEOUT_SECONDS=5.0</code>. If an LLM call exceeds 5s, the coroutine is cancelled immediately, logged, and seamlessly falls back to our deterministic rule extractor in less than 5ms with zero disruption to the user."</div>
+</div>
+
+<div class="qa-block">
+  <div class="qa-q">Q5: "How did you test your system?"</div>
+  <div class="qa-a"><strong>Answer:</strong> "We built a test suite of <strong>40 automated pytest tests</strong> covering all 12 endpoints, state memory, mind-changes, currency parsing, and timeout fallbacks. We also wrote an automated <strong>Playwright E2E headless browser test</strong> (<code>npm run test:e2e</code>) verifying external network access and local React asset rendering."</div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- Section 9 -->
+<h2>📋 9. Step-by-Step Live Demo Script for the Assessment Benchmark</h2>
+<p>Open <strong><code>http://localhost:5173</code></strong> in your browser and run through this exact 3-turn benchmark:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 12%;">Turn</th>
+      <th style="width: 28%;">Customer Natural Input</th>
+      <th style="width: 25%;">Agent State & Decision</th>
+      <th>Expected Agent Output</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Turn 1</strong></td>
+      <td><em>"I need a laptop for college."</em></td>
+      <td>Category set to <code>laptop</code>. Primary use is missing. Decision: <code>ask_clarification</code>.</td>
+      <td>Asks a focused question: <em>"What will you mainly use it for: general coursework, programming, gaming, creative work, or machine learning?"</em> (Does not ask for budget yet).</td>
+    </tr>
+    <tr>
+      <td><strong>Turn 2</strong></td>
+      <td><em>"Programming and machine learning. My budget is limited."</em></td>
+      <td>Primary uses: <code>programming</code>, <code>machine_learning</code>. Budget noted as limited. Decision: <code>ask_clarification</code>.</td>
+      <td>Asks: <em>"What is your approximate budget? And do you need to run models locally, or will you mostly use cloud platforms?"</em></td>
+    </tr>
+    <tr>
+      <td><strong>Turn 3</strong></td>
+      <td><em>"Around ₹80,000. Mostly local experiments, and I carry it around campus."</em></td>
+      <td>Budget: <code>₹80,000</code>. Hardware: <code>dedicated GPU</code>, <code>RAM &gt;= 16GB</code>, <code>portability: True</code>. Decision: <code>recommend</code>.</td>
+      <td>Delivers Top 2 laptops strictly under ₹80k: <strong>Acer Nitro V 15</strong> (₹76,990) & <strong>ASUS TUF A15</strong> (₹79,990) with RTX 4050 6GB, plus side-by-side Trade-Off Matrix. Stops questioning!</td>
+    </tr>
+    <tr>
+      <td><strong>Bonus Turn</strong></td>
+      <td><em>"Actually, my budget changed to ₹60,000."</em></td>
+      <td>Budget updated to <code>₹60,000</code>. Dedicated GPU requirement persists. Decision: <code>no_match</code>.</td>
+      <td>Honest explanation: Dedicated GPU laptops start at ₹62,990 (HP Victus). Suggests cloud ML or budget adjustment.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="card" style="margin-top: 12px; background: #f0fdf4; border-color: #86efac;">
+  <div class="card-title" style="color: #15803d;">✅ Pre-Interview Verification & Quick Commands</div>
+  <div style="font-size: 8.2pt; color: #166534; line-height: 1.6;">
+    • <strong>Backend API:</strong> <code>http://127.0.0.1:8000</code> (Swagger docs at <code>/docs</code>, health at <code>/api/v1/health</code>)<br/>
+    • <strong>React Frontend:</strong> <code>http://127.0.0.1:5173</code> (Interactive State Inspector, Catalog & Architecture modals)<br/>
+    • <strong>Run Test Suite:</strong> <code>cd backend &amp;&amp; .\.venv\Scripts\python.exe -m pytest</code> (40 / 40 passing in ~2.1s)<br/>
+    • <strong>Playwright E2E:</strong> <code>cd frontend &amp;&amp; npm run test:e2e</code> (Headless browser verified with 100% pass)
+  </div>
+</div>
+
+<div style="margin-top: 16px; text-align: center; font-size: 8pt; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 6px;">
+  ElectroAdvisor AI Technical Assessment & Architecture Guide · Created by Abhishek · October 2026
+</div>
+
+</body>
+</html>
