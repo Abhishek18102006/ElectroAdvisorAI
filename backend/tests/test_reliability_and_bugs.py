@@ -1,5 +1,6 @@
+import asyncio
 import pytest
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, AsyncMock, MagicMock
 from app.agent.extractor import RequirementsExtractor, parse_numeric_budget
 from app.agent.state import StateManager, create_initial_state
 from app.agent.filter_rank import FilterAndRankingEngine
@@ -198,6 +199,34 @@ async def test_llm_failure_and_timeout_fallback():
             assert extracted["category"] == "laptop"
             assert extracted["budget_max"] == 80000.0
             assert "programming" in extracted["primary_uses"]
+
+
+@pytest.mark.asyncio
+async def test_llm_strict_timeout_cancellation_and_fallback():
+    """Validates that a slow LLM exceeding LLM_TIMEOUT_SECONDS triggers timeout and falls back to rules in milliseconds."""
+    async def slow_generate(*args, **kwargs):
+        await asyncio.sleep(1.0)
+        return MagicMock(text='{"category": "laptop"}')
+
+    with patch("app.config.settings.GEMINI_API_KEY", "mock_key"):
+        with patch("app.config.settings.LLM_TIMEOUT_SECONDS", 0.05):
+            with patch("google.generativeai.GenerativeModel") as mock_model_cls:
+                mock_instance = mock_model_cls.return_value
+                mock_instance.generate_content_async = slow_generate
+
+                start_time = asyncio.get_event_loop().time()
+                extracted = await RequirementsExtractor.extract_requirements(
+                    customer_message="I need a monitor for programming under 30000",
+                    conversation_history=[],
+                    current_state={},
+                )
+                elapsed = asyncio.get_event_loop().time() - start_time
+
+                # Must return promptly without waiting for the slow LLM
+                assert elapsed < 0.5
+                assert extracted["category"] == "monitor"
+                assert extracted["budget_max"] == 30000.0
+                assert "programming" in extracted["primary_uses"]
 
 
 def test_all_non_laptop_categories_recommendation_and_trade_offs(client):

@@ -230,8 +230,9 @@ class RequirementsExtractor:
                     "Output valid JSON ONLY without markdown."
                 )
 
-                # Enforce strict 7-second timeout
-                response = await asyncio.wait_for(model.generate_content_async(prompt), timeout=7.0)
+                # Enforce strict configurable timeout (prioritizing timeout safety over key tireout)
+                timeout_sec = getattr(settings, "LLM_TIMEOUT_SECONDS", 5.0)
+                response = await asyncio.wait_for(model.generate_content_async(prompt), timeout=timeout_sec)
                 raw_text = response.text.strip()
                 if raw_text.startswith("```json"):
                     raw_text = raw_text[7:]
@@ -247,7 +248,10 @@ class RequirementsExtractor:
                 # Merge validated LLM attributes over rule defaults
                 return {**rule_extracted, **validated_dict}
             except asyncio.TimeoutError:
-                logger.warning("Gemini LLM extraction timed out after 7s; falling back to rules.")
+                logger.warning(
+                    "Gemini LLM extraction timed out after %.1fs; gracefully falling back to deterministic rules.",
+                    getattr(settings, "LLM_TIMEOUT_SECONDS", 5.0),
+                )
             except (json.JSONDecodeError, ValidationError) as e:
                 logger.warning(f"Malformed LLM output or validation error ({e}); falling back to rules.")
             except Exception as e:
@@ -280,12 +284,18 @@ class RequirementsExtractor:
                     ],
                     "response_format": {"type": "json_object"},
                 }
-                async with httpx.AsyncClient(timeout=7.0) as client:
+                timeout_sec = getattr(settings, "LLM_TIMEOUT_SECONDS", 5.0)
+                async with httpx.AsyncClient(timeout=timeout_sec) as client:
                     resp = await client.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
                     if resp.status_code == 200:
                         llm_dict = json.loads(resp.json()["choices"][0]["message"]["content"])
                         validated = ExtractedEntities(**llm_dict)
                         return {**rule_extracted, **validated.model_dump(exclude_none=True)}
+            except httpx.TimeoutException:
+                logger.warning(
+                    "OpenAI LLM extraction timed out after %.1fs; gracefully falling back to deterministic rules.",
+                    getattr(settings, "LLM_TIMEOUT_SECONDS", 5.0),
+                )
             except Exception as e:
                 logger.warning(f"OpenAI extraction error ({e}); falling back to rules.")
 

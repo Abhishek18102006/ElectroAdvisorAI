@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     GROQ_API_KEY: Optional[str] = None
     OPENAI_MODEL: str = "gpt-4o-mini"
     GEMINI_MODEL: str = "gemini-1.5-flash"
+    LLM_TIMEOUT_SECONDS: float = 5.0
 
     # CORS Configuration
     CORS_ORIGINS: List[str] = [
